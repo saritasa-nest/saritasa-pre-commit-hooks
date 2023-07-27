@@ -3,11 +3,8 @@ import shutil
 from copy import deepcopy
 from typing import List
 
-from pre_commit_hooks.check_nginx_wide_range import (
-    _disabled_locations_exist,
-    validate_nginx_wide_range,
-)
-from pre_commit_hooks.util import *
+from pre_commit_hooks.check_nginx_wide_range import _disabled_locations_exist, validate_nginx_wide_range
+from pre_commit_hooks.util import get_testing_path, git_add, git_diff_staged_files, git_reset
 
 
 def _prepare_test(dirname: str, git_dir: str) -> List[str]:
@@ -40,6 +37,43 @@ def test_no_nginx_files(temp_git_dir_with_files):
     with temp_git_dir_with_files.as_cwd():
         filenames = git_diff_staged_files()
         assert validate_nginx_wide_range(filenames) == 0
+
+
+def test_only_conf_files_staged(temp_git_dir_with_files, capsys):
+    """Check hook fails if conf files staged without disabled locations."""
+    with temp_git_dir_with_files.as_cwd():
+        _prepare_test(
+            "wide-try-files-no-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        git_reset("nginx.conf")
+        filenames = git_diff_staged_files()
+        assert validate_nginx_wide_range(filenames) == 1
+        captured = capsys.readouterr()
+        assert "[ERROR] location not disabled:" in captured.out
+
+
+def test_only_conf_files_staged_no_nginx_conf_exists(temp_git_dir_with_files):
+    """Check hook runs without errors if no nginx.conf file exists."""
+    with temp_git_dir_with_files.as_cwd():
+        filenames = _prepare_test(
+            "wide-try-files-no-nginx-conf",
+            temp_git_dir_with_files,
+        )
+        assert validate_nginx_wide_range(filenames) == 0
+
+
+def test_no_passed_nginx_conf_exists(temp_git_dir_with_files):
+    """Check hook fails if no passed nginx config exists."""
+    with temp_git_dir_with_files.as_cwd():
+        filenames = _prepare_test(
+            "wide-try-files-no-nginx-conf",
+            temp_git_dir_with_files,
+        )
+        assert validate_nginx_wide_range(
+            filenames,
+            nginx_config_path="ci/nginx.conf",
+        ) == 1
 
 
 def test_no_try_files(temp_git_dir_with_files):
@@ -110,9 +144,15 @@ def test_wide_try_files_with_disabled_locations(temp_git_dir_with_files):
         assert validate_nginx_wide_range(filenames) == 0
 
 
-def test_disabled_locations_exist_messed_order(messed_locations):
+def test_disabled_locations_exist_messed_order(
+    locations, messed_locations, capsys,
+):
     """Check `_disabled_locations_exist` method with messed directives order."""
-    assert _disabled_locations_exist(messed_locations)
+    assert not _disabled_locations_exist(messed_locations)
+    captured = capsys.readouterr()
+    assert "[ERROR] location not disabled:" in captured.out
+    assert locations[0]["args"][1] in captured.out
+    assert locations[-1]["args"][1] in captured.out
 
 
 def test_disabled_locations_exist_not_all_directives_added(locations, capsys):
@@ -127,8 +167,7 @@ def test_disabled_locations_exist_not_all_directives_added(locations, capsys):
 
 
 def test_disabled_locations_exist_not_all_directives_regex_values_added(
-    locations,
-    capsys,
+    locations, capsys,
 ):
     """Check `_disabled_locations_exist` method when not all directives regex `values` added."""
     locations_copy = deepcopy(locations)
@@ -147,3 +186,184 @@ def test_disabled_locations_exist_not_all_directives_regex_values_added(
     captured = capsys.readouterr()
     assert "[ERROR] location not disabled:" in captured.out
     assert locations[-1]["args"][1] in captured.out
+
+
+def test_wide_try_files_with_extra_disabled_locations_no_extra_passed(
+    temp_git_dir_with_files, capsys,
+):
+    """Check hook fails if `try_files` directive exists, but not all extra disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        extra_deny_locations = ["^/(test/|test1|test2)", "/cron3.*"]
+        filenames = _prepare_test(
+            "wide-try-files-with-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                extra_deny_locations=extra_deny_locations,
+            )
+            == 1
+        )
+        captured = capsys.readouterr()
+        assert "[ERROR] location not disabled:" in captured.out
+        assert extra_deny_locations[1] in captured.out
+
+
+def test_wide_try_files_with_extra_disabled_locations_extra_passed(
+    temp_git_dir_with_files,
+):
+    """Check hook runs without errors if `try_files` directive exists, but correct disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        extra_deny_locations = ["^/(test/|test1|test2)", "/cron3.*"]
+        filenames = _prepare_test(
+            "wide-try-files-with-extra-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                extra_deny_locations=extra_deny_locations,
+            )
+            == 0
+        )
+
+
+def test_wide_try_files_with_custom_disabled_locations_no_custom_passed(
+    temp_git_dir_with_files, capsys,
+):
+    """Check hook fails if `try_files` directive exists, but not all custom disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        custom_deny_locations = ["/cron2.*", "^/(app/|vendor)"]
+        filenames = _prepare_test(
+            "wide-try-files-no-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                custom_deny_locations=custom_deny_locations,
+            )
+            == 1
+        )
+        captured = capsys.readouterr()
+        assert "[ERROR] location not disabled:" in captured.out
+        assert custom_deny_locations[0] in captured.out
+        assert custom_deny_locations[1] in captured.out
+
+
+def test_wide_try_files_with_custom_disabled_locations_custom_passed(
+    temp_git_dir_with_files,
+):
+    """Check hook runs without errors if `try_files` directive exists, but correct disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        custom_deny_locations = ["/cron2.*", "^/(app/|vendor)"]
+        filenames = _prepare_test(
+            "wide-try-files-with-custom-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                custom_deny_locations=custom_deny_locations,
+            )
+            == 0
+        )
+
+
+def test_wide_try_files_with_custom_extra_disabled_locations_nothing_passed(
+    temp_git_dir_with_files, capsys,
+):
+    """Check hook fails if `try_files` directive exists, but no disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        custom_deny_locations = ["/cron2.*", "^/(app/|vendor)"]
+        extra_deny_locations = ["^/(test/|test1|test2)", "/cron3.*"]
+        filenames = _prepare_test(
+            "wide-try-files-no-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                custom_deny_locations=custom_deny_locations,
+                extra_deny_locations=extra_deny_locations,
+            )
+            == 1
+        )
+        captured = capsys.readouterr()
+        assert "[ERROR] location not disabled:" in captured.out
+        assert custom_deny_locations[0] in captured.out
+        assert custom_deny_locations[1] in captured.out
+        assert extra_deny_locations[0] in captured.out
+        assert extra_deny_locations[1] in captured.out
+
+
+def test_wide_try_files_with_custom_extra_disabled_locations_no_extra_passed(
+    temp_git_dir_with_files, capsys,
+):
+    """Check hook fails if `try_files` directive exists, but not all extra disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        custom_deny_locations = ["/cron2.*", "^/(app/|vendor)"]
+        extra_deny_locations = ["^/(test/|test1|test2)", "/cron3.*"]
+        filenames = _prepare_test(
+            "wide-try-files-with-custom-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                custom_deny_locations=custom_deny_locations,
+                extra_deny_locations=extra_deny_locations,
+            )
+            == 1
+        )
+        captured = capsys.readouterr()
+        assert "[ERROR] location not disabled:" in captured.out
+        assert extra_deny_locations[0] in captured.out
+        assert extra_deny_locations[1] in captured.out
+
+
+def test_wide_try_files_with_custom_extra_disabled_locations_no_custom_passed(
+    temp_git_dir_with_files, capsys,
+):
+    """Check hook fails if `try_files` directive exists, but not all custom disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        custom_deny_locations = ["/cron2.*", "^/(app/|vendor)"]
+        extra_deny_locations = ["^/(test/|test1|test2)", "/cron3.*"]
+        filenames = _prepare_test(
+            "wide-try-files-with-extra-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                custom_deny_locations=custom_deny_locations,
+                extra_deny_locations=extra_deny_locations,
+            )
+            == 1
+        )
+        captured = capsys.readouterr()
+        assert "[ERROR] location not disabled:" in captured.out
+        assert custom_deny_locations[0] in captured.out
+        assert custom_deny_locations[1] in captured.out
+
+
+def test_wide_try_files_with_custom_extra_disabled_locations(
+    temp_git_dir_with_files,
+):
+    """Check hook runs without errors if `try_files` directive exists, but correct disabled locations defined."""
+    with temp_git_dir_with_files.as_cwd():
+        custom_deny_locations = ["/cron2.*", "^/(app/|vendor)"]
+        extra_deny_locations = ["^/(test/|test1|test2)", "/cron3.*"]
+        filenames = _prepare_test(
+            "wide-try-files-with-custom-extra-disabled-locations",
+            temp_git_dir_with_files,
+        )
+        assert (
+            validate_nginx_wide_range(
+                filenames=filenames,
+                custom_deny_locations=custom_deny_locations,
+                extra_deny_locations=extra_deny_locations,
+            )
+            == 0
+        )

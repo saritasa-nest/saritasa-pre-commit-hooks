@@ -24,12 +24,17 @@ def get_testing_path():
 
 def git_init(git_dir: str = "."):
     """Shortand for `git init` command."""
-    return cmd_output("git", "init", "--", str(git_dir))
+    return cmd_output("git", "init", "--", git_dir)
 
 
 def git_add(files: str = "."):
     """Shortand for `git add .` command."""
-    return cmd_output("git", "add", ".")
+    return cmd_output("git", "add", files)
+
+
+def git_reset(files: str = "."):
+    """Shortand for `git reset` command."""
+    return cmd_output("git", "reset", files)
 
 
 def git_diff_staged_files():
