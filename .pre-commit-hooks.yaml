@@ -1,0 +1,6 @@
+-   id: check-nginx-wide-range
+    name: check whether wide `try_files` directive is added in nginx config without disabled locations
+    description: prevents from committing nginx configs with wide `try_files` directives without disabled locations
+    entry: check-nginx-wide-range
+    language: python
+    stages: [commit, push, manual]
