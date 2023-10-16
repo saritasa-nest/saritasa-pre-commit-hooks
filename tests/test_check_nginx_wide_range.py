@@ -367,3 +367,10 @@ def test_wide_try_files_with_custom_extra_disabled_locations(
             )
             == 0
         )
+
+
+def test_no_try_files_with_default_nginx_includes(temp_git_dir_with_files):
+    """Check no errors when nginx config contains absent default files."""
+    with temp_git_dir_with_files.as_cwd():
+        filenames = _prepare_test("no-try-files-with-default-nginx-includes", temp_git_dir_with_files)
+        assert validate_nginx_wide_range(filenames) == 0
