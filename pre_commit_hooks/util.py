@@ -17,9 +17,12 @@ def cmd_output(*cmd: str, retcode: int | None = 0, **kwargs: Any) -> str:
     return stdout
 
 
-def get_tests_assets_path():
+def get_tests_assets_path(pre_commit_hook_name: str):
     """Get `tests/assets` folder path with different examples for tests."""
-    return os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests/assets")
+    return os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        f"tests/assets/{pre_commit_hook_name}",
+    )
 
 
 def git_init(git_dir: str = "."):

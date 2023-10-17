@@ -19,7 +19,10 @@ def _prepare_test(dirname: str, git_dir: str) -> List[str]:
 
     """
     with git_dir.as_cwd():
-        copy_path = os.path.join(get_tests_assets_path(), f"{dirname}/")
+        copy_path = os.path.join(
+            get_tests_assets_path("check-nginx-wide-range"),
+            f"{dirname}/",
+        )
         shutil.copytree(copy_path, git_dir, dirs_exist_ok=True)
         git_add()
         filenames = git_diff_staged_files()
