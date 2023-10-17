@@ -123,10 +123,51 @@ def _disabled_locations_exist(
     return all_disabled_locations_found
 
 
+def _has_parse_errors(
+    config: dict,
+    ignore_errors_keywords: List[str] | None = None,
+) -> bool:
+    """Check whether parsed config has errors.
+
+    Sometimes projects use `include` directives without real files presence in
+    the repo (these files are added as nginx defaults during installation) -
+    https://github.com/nginx/nginx/tree/master/conf. Errors with such keywords
+    are added to `ignored` list by default.
+
+    Args:
+      config: parsed nginx congfig
+      ignore_errors_keywords: keywords that contained in errors to be ignored
+
+    Returns:
+        (bool): flag whether nginx config has parse errors
+
+    """
+    if config["status"] == "ok":
+        return False
+
+    ignore_errors_keywords = ignore_errors_keywords or []
+    ignore_errors_keywords.extend([
+        "fastcgi_params", "koi-utf", "koi-win", "mime.types",
+        "scgi_params", "uwsgi_params", "win-utf",
+    ])
+
+    for error in config["errors"]:
+        file, traceback = error["file"], error["error"]
+
+        # do not process errors from `ignore_errors_keywords`
+        if any(keyword in traceback for keyword in ignore_errors_keywords):
+            continue
+
+        print(f"[PARSE ERROR] {file}: {traceback}")
+        return True
+    return False
+
+
 def _nginx_valid(
     filename: str,
     custom_deny_locations: List[str] | None = None,
     extra_deny_locations: List[str] | None = None,
+    ignore_errors_keywords: List[str] | None = None,
 ) -> bool:
     """Check whether file with `filename` contains wide nginx configuration.
 
@@ -140,17 +181,15 @@ def _nginx_valid(
       filename: nginx config filename
       custom_deny_locations: custom deny locations, overrides existing ones
       extra_deny_locations: extra deny locations, adds to existing ones
+      ignore_errors_keywords: keywords that contained in errors to be ignored
 
     Returns:
         (bool): flag whether nginx config is valid
 
     """
     config = crossplane.parse(filename)
-    if config["status"] != "ok":
-        for error in config["errors"]:
-            file, traceback = error["file"], error["error"]
-            print(f"[PARSE ERROR] {file}: {traceback}")
-            return False
+    if _has_parse_errors(config, ignore_errors_keywords):
+        return False
 
     # crossplane config will contain all files which are attached to main
     # `nginx.conf` (i.e. `include` directives)
@@ -199,6 +238,7 @@ def validate_nginx_wide_range(
     nginx_config_path: str = "",
     custom_deny_locations: List[str] | None = None,
     extra_deny_locations: List[str] | None = None,
+    ignore_errors_keywords: List[str] | None = None,
 ) -> int:
     """Validate nginx configuration files for `wide` range.
 
@@ -207,6 +247,7 @@ def validate_nginx_wide_range(
       nginx_config_path: path to main `nginx.conf` file to parse
       custom_deny_locations: custom deny locations, overrides existing ones
       extra_deny_locations: extra deny locations, adds to existing ones
+      ignore_errors_keywords: keywords that contained in errors to be ignored
 
     Search for wide range of files in locations of `nginx.conf` and included to
     it files:
@@ -245,6 +286,7 @@ def validate_nginx_wide_range(
             config,
             custom_deny_locations,
             extra_deny_locations,
+            ignore_errors_keywords,
         )
         if not success:
             retval = 1
@@ -279,6 +321,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Extra deny locations, adds to existing ones (i.e. '/cron.*')",
         action="append",
     )
+    parser.add_argument(
+        "--ignore_errors_keywords",
+        nargs="*",
+        default=[],
+        help=(
+            "Extra keywords which are contained in errors to be ignored, adds "
+            "to existing ones, default: fastcgi_params, koi-utf, koi-win, "
+            "mime.types, scgi_params, uwsgi_params, win-utf"
+        ),
+        action="append",
+    )
     args = parser.parse_args(argv)
 
     return validate_nginx_wide_range(
@@ -286,6 +339,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.nginx_config_path[0],
         [item for sublist in args.custom_deny_locations for item in sublist],
         [item for sublist in args.extra_deny_locations for item in sublist],
+        [item for sublist in args.ignore_errors_keywords for item in sublist],
     )
 
 

@@ -17,9 +17,9 @@ def cmd_output(*cmd: str, retcode: int | None = 0, **kwargs: Any) -> str:
     return stdout
 
 
-def get_testing_path():
-    """Get `testing` folder path with different examples for tests."""
-    return os.path.join(os.path.dirname(os.path.dirname(__file__)), "testing")
+def get_tests_assets_path():
+    """Get `tests/assets` folder path with different examples for tests."""
+    return os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests/assets")
 
 
 def git_init(git_dir: str = "."):

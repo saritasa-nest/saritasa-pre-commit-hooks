@@ -68,6 +68,25 @@ repos:
           - --custom_deny_locations=/cron2.*
 ```
 
-Please keep in mind that in case if you messed default locations denies values, hook will ask you to update it to look the sam. I.e. when you mixed order of params in `\.(sh|json|conf|xml|md|conf|toml|yml|yaml|log|pid)$` -> you would be forced to update it to this manner `\.(json|sh|xml|md|conf|toml|yml|yaml|log|pid)$`.
+Please keep in mind that in case if you messed default locations denies values, hook will ask you to update it to look the same. I.e. when you mixed order of params in `\.(sh|json|conf|xml|md|conf|toml|yml|yaml|log|pid)$` -> you would be forced to update it to this manner `\.(json|sh|xml|md|conf|toml|yml|yaml|log|pid)$`.
+
+4. You can specify extra keywords, existance of which, will make parser error to be ignored `--ignore_errors_keywords="test"` param
+
+Examples:
+
+```.pre-commit-config.yaml
+repos:
+  - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+    rev: 0.0.1
+    hooks:
+      - id: check-nginx-wide-range
+        args:
+          - --ignore_errors_keywords=test
+          - --ignore_errors_keywords=test2
+```
+
+Please note that by default there are always ignored errors with these keywords: `fastcgi_params, koi-utf, koi-win, mime.types, scgi_params, uwsgi_params, win-utf`.
+
+Thiey are ignored because sometimes project's nginx config file may contain `include` directives to files without their real presence in the repo (these files are added as [nginx defaults](https://github.com/nginx/nginx/tree/master/conf) during installation) and can be ignored during pre-commit hook processing.
 
 This is it!
