@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import List
 
 from pre_commit_hooks.check_nginx_wide_range import _disabled_locations_exist, validate_nginx_wide_range
-from pre_commit_hooks.util import get_testing_path, git_add, git_diff_staged_files, git_reset
+from pre_commit_hooks.util import get_tests_assets_path, git_add, git_diff_staged_files, git_reset
 
 
 def _prepare_test(dirname: str, git_dir: str) -> List[str]:
@@ -19,7 +19,7 @@ def _prepare_test(dirname: str, git_dir: str) -> List[str]:
 
     """
     with git_dir.as_cwd():
-        copy_path = os.path.join(get_testing_path(), f"{dirname}/")
+        copy_path = os.path.join(get_tests_assets_path(), f"{dirname}/")
         shutil.copytree(copy_path, git_dir, dirs_exist_ok=True)
         git_add()
         filenames = git_diff_staged_files()
