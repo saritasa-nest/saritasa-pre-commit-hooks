@@ -3,5 +3,5 @@
     description: prevents from committing nginx configs with wide `try_files` directives without disabled locations
     entry: check-nginx-wide-range
     language: python
-    stages: [commit, push, manual]
+    stages: [pre-commit, pre-push, manual]
     require_serial: true
