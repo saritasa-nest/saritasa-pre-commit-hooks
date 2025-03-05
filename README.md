@@ -31,7 +31,7 @@ location ~ ^/(app/|vendor|src|tests|vagrant|docs|phpunit|svn|git|docker|migratio
 ```.pre-commit-config.yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.1
+    rev: 0.0.2
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -45,7 +45,7 @@ Examples:
 ```.pre-commit-config.yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.1
+    rev: 0.0.2
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -60,7 +60,7 @@ Examples:
 ```.pre-commit-config.yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.1
+    rev: 0.0.2
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -77,7 +77,7 @@ Examples:
 ```.pre-commit-config.yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.1
+    rev: 0.0.2
     hooks:
       - id: check-nginx-wide-range
         args:
