@@ -51,6 +51,14 @@ repos:
     hooks:
       - id: add-trailing-comma
 
+  - repo: local
+    hooks:
+    -   id: add-task-number
+        name: add task number
+        entry: python -m pre_commit_hooks.add_task_number.cli
+        language: python
+        stages: [commit-msg]
+
   - repo: https://github.com/jorisroovers/gitlint
     rev:  v0.19.1
     hooks:
@@ -66,12 +74,13 @@ repos:
       - id: djjs
         args: [ "--tabwidth=2" ]
 
-  - repo: https://github.com/pycqa/docformatter
-    rev: v1.7.3
-    hooks:
-      - id: docformatter
-        args: [
-          --wrap-descriptions=0,
-          --in-place,
-          --blank
-        ]
+#   Uncomment when https://github.com/PyCQA/docformatter/issues/293 is fixed
+#   - repo: https://github.com/pycqa/docformatter
+#     rev: v1.7.3
+#     hooks:
+#       - id: docformatter
+#         args: [
+#           --wrap-descriptions=0,
+#           --in-place,
+#           --blank
+#         ]

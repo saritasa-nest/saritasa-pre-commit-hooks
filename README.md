@@ -90,3 +90,22 @@ Please note that by default there are always ignored errors with these keywords:
 Thiey are ignored because sometimes project's nginx config file may contain `include` directives to files without their real presence in the repo (these files are added as [nginx defaults](https://github.com/nginx/nginx/tree/master/conf) during installation) and can be ignored during pre-commit hook processing.
 
 This is it!
+
+### `add_task_number`
+
+Provide task number to commit automatically. It takes task number from branch's name, so branch should have pre-defined
+format in order this hook to work.
+
+#### Examples
+
+Commit message: `My beautiful message`
+Branch name: `feature/ABC-123-my-branch`
+
+Then branch name will be parsed according to `regex` argument (`(feature|fix)/(?P<task>[A-Z0-9]+-[0-9]+)-.*` by default) and task number will be retrieved from branch name. In this case task number is `ABC-123`
+Then this task number will be automatically appended to commit message according to `format` argument
+(`{message}\\n\\nTask: {task}` by default), so result message will be
+```
+My beautiful message
+
+Task: ABC-123
+```

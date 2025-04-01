@@ -43,3 +43,19 @@ def git_reset(files: str = "."):
 def git_diff_staged_files():
     """Shortand for `git diff` command to get updates files."""
     return cmd_output("git", "diff", "--name-only", "--staged").strip().split("\n")
+
+
+def git_create_branch(branch_name: str):
+    """Shortand for `git branch` command to create branch."""
+    return cmd_output("git", "checkout", "-b", f"{branch_name}")
+
+
+def git_commit(commit_msg: str):
+    """Shortand for `git commit` command to make commit."""
+    return cmd_output(
+        "git",
+        "commit",
+        "-m",
+        f"{commit_msg}",
+        "--allow-empty",
+    )

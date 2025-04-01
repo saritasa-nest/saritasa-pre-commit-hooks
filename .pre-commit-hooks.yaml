@@ -5,3 +5,9 @@
     language: python
     stages: [pre-commit, pre-push, manual]
     require_serial: true
+
+-   id: add-task-number
+    name: add-task-number
+    entry: add-task-number
+    language: python
+    description: pre-commit hook for adding issue task number to your git commit messages
