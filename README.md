@@ -28,7 +28,7 @@ location ~ ^/(app/|vendor|src|tests|vagrant|docs|phpunit|svn|git|docker|migratio
 
 1. You can specify custom nginx config file and location `--nginx_config_path=custom.conf`  in case if it is different from `./nginx.conf`
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -42,7 +42,7 @@ repos:
 
 Examples:
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -57,7 +57,7 @@ repos:
 
 Examples:
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -74,7 +74,7 @@ Please keep in mind that in case if you messed default locations denies values, 
 
 Examples:
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -108,4 +108,17 @@ Then this task number will be automatically appended to commit message according
 My beautiful message
 
 Task: ABC-123
+```
+
+Example of what should be added to `.pre-commit-config.yaml`
+
+```yaml
+repos:
+  - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+    rev: 0.0.2
+    hooks:
+      - id: add-task-number
+        args:
+        - "--regex=feature/(?P<task>[A-Z]{2,11}-[0-9]{1,6})-.*"
+        - "--format={message}\\n\\nTask: {task}"
 ```
