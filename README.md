@@ -101,7 +101,7 @@ format in order this hook to work.
 Commit message: `My beautiful message`
 Branch name: `feature/ABC-123-my-branch`
 
-Then branch name will be parsed according to `regex` argument (`(feature|fix)/(?P<task>[A-Z0-9]+-[0-9]+)-.*` by default) and task number will be retrieved from branch name. In this case task number is `ABC-123`
+Then branch name will be parsed according to `branch-regex` argument (`(feature|fix)/(?P<task>[A-Z0-9]+-[0-9]+)-.*` by default) and task number will be retrieved from branch name. In this case task number is `ABC-123`
 Then this task number will be automatically appended to commit message according to `format` argument
 (`{message}\\n\\nTask: {task}` by default), so result message will be
 ```
@@ -119,6 +119,6 @@ repos:
     hooks:
       - id: add-task-number
         args:
-        - "--regex=feature/(?P<task>[A-Z]{2,11}-[0-9]{1,6})-.*"
+        - "--branch-regex=feature/(?P<task>[A-Z]{2,11}-[0-9]{1,6})-.*"
         - "--format={message}\\n\\nTask: {task}"
 ```

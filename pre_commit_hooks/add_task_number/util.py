@@ -11,9 +11,9 @@ def get_current_branch() -> str:
     return cmd_output("git", "rev-parse", "--abbrev-ref", "HEAD")
 
 
-def retrieve_task(branch: str, regex: str) -> str | None:
+def retrieve_task(branch: str, branch_regex: str) -> str | None:
     """Retrieve task from branch according to the given regex."""
-    matches = re.match(regex, branch)
+    matches = re.match(branch_regex, branch)
 
     if not matches:
         return
@@ -74,10 +74,10 @@ def get_message_without_comment_section(message: str) -> str:
     )
 
 
-def add_task_number(filename: str, regex: str, format_template: str):
+def add_task_number(filename: str, branch_regex: str, format_template: str):
     """Provide task number to commit message."""
     branch = get_current_branch()
-    task_number = retrieve_task(branch, regex)
+    task_number = retrieve_task(branch, branch_regex)
 
     if not task_number:
         return

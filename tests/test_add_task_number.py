@@ -52,7 +52,7 @@ def test_add_task_number(temp_git_dir):
 
         util.add_task_number(
             filename=commit_msg_file_path,
-            regex=r"feature/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
+            branch_regex=r"feature/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
             format_template="{message}\n\nTask: {task}",
         )
         with open(commit_msg_file_path, "r") as commit_msg_file:
@@ -77,7 +77,7 @@ def test_empty_commit_message_will_not_be_modified(temp_git_dir):
 
         util.add_task_number(
             filename=commit_msg_file_path,
-            regex=r"feature/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
+            branch_regex=r"feature/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
             format_template="{message}\n\nTask: {task}",
         )
         with open(commit_msg_file_path, "r") as commit_msg_file:
