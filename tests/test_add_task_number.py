@@ -28,7 +28,7 @@ def test_get_message_without_comment_section():
         "My beautiful description of commit."
     )
 
-    msg_without_comment_section = util.get_message_without_comment_section(
+    msg_without_comment_section = util.strip_comment_section(
         commit_msg,
     )
 

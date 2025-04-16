@@ -37,7 +37,7 @@ def is_task_in_message(contents: str, task: str) -> bool:
     return False
 
 
-def get_message_without_comment_section(message: str) -> str:
+def strip_comment_section(message: str) -> str:
     """Return message without comment section which is located bellow the line.
 
     All bellow this line will be ignored including task number. So need to
@@ -84,7 +84,7 @@ def add_task_number(filename: str, branch_regex: str, format_template: str):
 
     with io.open(filename, "r+") as commit_message_file:
         commit_message = commit_message_file.read()
-        commit_message = get_message_without_comment_section(
+        commit_message = strip_comment_section(
             commit_message,
         )
         commit_message = commit_message.strip()
