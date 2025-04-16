@@ -118,7 +118,11 @@ repos:
     rev: 0.0.2
     hooks:
       - id: add-task-number
+        stages:
+          - commit-msg
+        # To check logs about which task was appended to commit message
+        verbose: true
         args:
-        - "--branch-regex=feature/(?P<task>[A-Z]{2,11}-[0-9]{1,6})-.*"
-        - "--format={message}\\n\\nTask: {task}"
+          - "--branch-regex=feature/(?P<task>[A-Z]{2,11}-[0-9]{1,6})-.*"
+          - "--format={message}\\n\\nTask: {task}"
 ```

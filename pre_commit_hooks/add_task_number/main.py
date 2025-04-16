@@ -1,14 +1,9 @@
 import io
 import re
 
-from pre_commit_hooks.util import cmd_output
+from pre_commit_hooks.util import get_current_branch
 
 GIT_COMMENT_SECTION_LINE = r"#?[ ]*-+ >8 -+"
-
-
-def get_current_branch() -> str:
-    """Return current branch's name."""
-    return cmd_output("git", "rev-parse", "--abbrev-ref", "HEAD")
 
 
 def retrieve_task(branch: str, branch_regex: str) -> str | None:
@@ -82,8 +77,13 @@ def add_task_number(filename: str, branch_regex: str, format_template: str):
 
         is_empty_message = not commit_message
 
+        formatted_task_number = format_template.format(
+            message="",
+            task=task_number,
+        ).strip()
+
         skip_task_appending = (
-            is_task_in_message(commit_message, task_number)
+            is_task_in_message(commit_message, formatted_task_number)
             or is_empty_message
         )
 
@@ -98,3 +98,5 @@ def add_task_number(filename: str, branch_regex: str, format_template: str):
         commit_message_file.seek(0)
         commit_message_file.write(commit_message_with_task)
         commit_message_file.truncate()
+
+    print(f"Message `{formatted_task_number}` was appended to your commit.")

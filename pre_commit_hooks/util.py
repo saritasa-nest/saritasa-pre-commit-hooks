@@ -59,3 +59,8 @@ def git_commit(commit_msg: str):
         f"{commit_msg}",
         "--allow-empty",
     )
+
+
+def get_current_branch() -> str:
+    """Return current branch's name."""
+    return cmd_output("git", "rev-parse", "--abbrev-ref", "HEAD")

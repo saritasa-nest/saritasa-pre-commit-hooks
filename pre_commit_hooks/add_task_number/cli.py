@@ -18,7 +18,7 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "--branch-regex",
-        default=r"(feature|fix)/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
+        default=r"^(feature|fix)/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
         type=str,
         help=(
             "Regex to get task number from the branch name. "

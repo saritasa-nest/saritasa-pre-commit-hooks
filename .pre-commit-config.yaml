@@ -58,6 +58,7 @@ repos:
         entry: python -m pre_commit_hooks.add_task_number.cli
         language: python
         stages: [commit-msg]
+        verbose: true
 
   - repo: https://github.com/jorisroovers/gitlint
     rev:  v0.19.1
