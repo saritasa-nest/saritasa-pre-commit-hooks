@@ -2,7 +2,7 @@
 
 import argparse
 
-from .util import add_task_number
+from .main import add_task_number
 
 
 def parse_args(argv=None):

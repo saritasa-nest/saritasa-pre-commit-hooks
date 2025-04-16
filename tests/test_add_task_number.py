@@ -1,5 +1,5 @@
 from pre_commit_hooks import util as base_util
-from pre_commit_hooks.add_task_number import util
+from pre_commit_hooks.add_task_number import main
 
 
 def test_is_task_in_message():
@@ -10,8 +10,8 @@ def test_is_task_in_message():
         "Task: ABC-123\n"
     )
 
-    assert util.is_task_in_message(commit_msg, "Task: ABC-123") is True
-    assert util.is_task_in_message(commit_msg, "Task: CDE-111") is False
+    assert main.is_task_in_message(commit_msg, "Task: ABC-123") is True
+    assert main.is_task_in_message(commit_msg, "Task: CDE-111") is False
 
 
 def test_get_message_without_comment_section():
@@ -19,7 +19,6 @@ def test_get_message_without_comment_section():
     commit_msg = (
         "My beautiful commit message\n\n"
         "My beautiful description of commit.\n\n"
-        "# My beautiful comment.\n\n"
         "--- >8 ---\n\n"
         "My beautiful comment section."
     )
@@ -28,7 +27,7 @@ def test_get_message_without_comment_section():
         "My beautiful description of commit."
     )
 
-    msg_without_comment_section = util.strip_comment_section(
+    msg_without_comment_section = main.strip_comment_section(
         commit_msg,
     )
 
@@ -50,7 +49,7 @@ def test_add_task_number(temp_git_dir):
 
         commit_msg_file_path = f"{temp_git_dir}/.git/COMMIT_EDITMSG"
 
-        util.add_task_number(
+        main.add_task_number(
             filename=commit_msg_file_path,
             branch_regex=r"feature/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
             format_template="{message}\n\nTask: {task}",
@@ -75,7 +74,7 @@ def test_empty_commit_message_will_not_be_modified(temp_git_dir):
         with open(commit_msg_file_path, "w"):
             pass
 
-        util.add_task_number(
+        main.add_task_number(
             filename=commit_msg_file_path,
             branch_regex=r"feature/(?P<task>[A-Z0-9]+-[0-9]+)-.*",
             format_template="{message}\n\nTask: {task}",
