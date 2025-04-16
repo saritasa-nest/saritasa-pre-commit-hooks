@@ -56,22 +56,13 @@ def strip_comment_section(message: str) -> str:
 
     ```
 
-    Also remove lines which start with `#` because they are considered to be
-    comment lines.
-
     """
     match = re.search(GIT_COMMENT_SECTION_LINE, message)
 
     if match is not None:
-        result_message = message[:match.start()]
-    else:
-        result_message = message
+        return message[:match.start()]
 
-    return "\n".join(
-        line
-        for line in result_message.splitlines()
-        if not line.startswith("#")
-    )
+    return message
 
 
 def add_task_number(filename: str, branch_regex: str, format_template: str):
