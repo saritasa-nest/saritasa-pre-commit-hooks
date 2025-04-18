@@ -64,3 +64,15 @@ def git_commit(commit_msg: str):
 def get_current_branch() -> str:
     """Return current branch's name."""
     return cmd_output("git", "rev-parse", "--abbrev-ref", "HEAD")
+
+
+def get_git_config_param(param: str) -> str | None:
+    """Return value from git config.
+
+    If return value is `None`, then this param is not set in git config.
+
+    """
+    try:
+        return cmd_output("git", "config", "--get", param)
+    except RuntimeError:
+        return None

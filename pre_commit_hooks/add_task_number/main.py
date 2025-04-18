@@ -1,9 +1,16 @@
 import io
 import re
 
-from pre_commit_hooks.util import get_current_branch
+from pre_commit_hooks.util import get_current_branch, get_git_config_param
 
-GIT_COMMENT_SECTION_LINE = r"#?[ ]*-+ >8 -+"
+GIT_COMMENT_STRING = (
+    get_git_config_param("core.commentString")
+    or get_git_config_param("core.commentChar")
+    or "#"
+)
+GIT_COMMENT_SECTION_LINE = (
+    r"{comment_string}?[ ]*-+ >8 -+".format(comment_string=GIT_COMMENT_STRING)
+)
 
 
 def retrieve_task(branch: str, branch_regex: str) -> str | None:
@@ -19,14 +26,16 @@ def retrieve_task(branch: str, branch_regex: str) -> str | None:
 
 def is_task_in_message(contents: str, task: str) -> bool:
     """Check whether task has been already added to commit message."""
+    task_regex = r"\b{task}\b".format(task=task)
+
     for line in contents.splitlines():
-        stripped = line.strip().lower()
+        stripped = line.strip()
 
         # Skip empty lines and comment lines
-        if stripped == "" or stripped.startswith("#"):
+        if stripped == "" or stripped.startswith(GIT_COMMENT_STRING):
             continue
 
-        if task.lower() in stripped:
+        if re.search(task_regex, contents, re.IGNORECASE):
             return True
 
     return False

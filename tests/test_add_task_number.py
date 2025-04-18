@@ -21,10 +21,18 @@ def test_is_task_in_message():
     commit_msg = (
         "My beautiful commit message\n\n"
         "My beautiful description of commit.\n\n"
-        "Task: ABC-123\n"
+        "Task: ABC-1234\n"
     )
 
-    assert main.is_task_in_message(commit_msg, "Task: ABC-123") is True
+    assert main.is_task_in_message(commit_msg, "Task: ABC-1234") is True
+    assert main.is_task_in_message(commit_msg, "Task: abc-1234") is True
+
+    assert main.is_task_in_message(commit_msg, "Task: ABC-123") is False
+    assert main.is_task_in_message(commit_msg, "Task: abc-123") is False
+
+    assert main.is_task_in_message(commit_msg, "Task: BC-1234") is False
+    assert main.is_task_in_message(commit_msg, "Task: bc-1234") is False
+
     assert main.is_task_in_message(commit_msg, "Task: CDE-111") is False
 
 
