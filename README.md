@@ -90,3 +90,45 @@ Please note that by default there are always ignored errors with these keywords:
 Thiey are ignored because sometimes project's nginx config file may contain `include` directives to files without their real presence in the repo (these files are added as [nginx defaults](https://github.com/nginx/nginx/tree/master/conf) during installation) and can be ignored during pre-commit hook processing.
 
 This is it!
+
+### `check_jira_pre_commit`
+
+Prevent committing without Jira Task ID in the commit message.
+
+- Fails the commit if no Jira Task ID (e.g., `JIRA-1234`) is found in the commit message.
+- Allows merge commits (messages starting with `Merge `).
+
+### Hook usage example
+
+Example of what should be added to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+    rev: 0.0.2
+    hooks:
+      - id: check_jira_pre_commit
+        stages:
+          - commit-msg
+```
+
+#### Examples and messages
+
+Examples of a valid commit message:
+- `feat: add README.md JIRA-123`
+- `chore: fix typo, JIRA-321`
+- `docs: add docs Task: JIRA-4321`
+
+Such commits will result in a pass of a hook and won't output any error message.
+
+Examples of an invalid commit message:
+- `feat: add README.md`
+- `chore: fix typo, jira-321`
+- `docs: add docs Task: JIRA4321`
+
+Such commits will result in a fail of a hook and output an error message:
+**Aborting commit. Your commit message is missing a Jira Task ID, i.e. JIRA-1234.**
+
+In a situation of `git merge`, where the commit message is generated in a `Merge branch test into main` manner, hook will skip such commits.
+And output a message:
+**Ignoring git merge commit**
