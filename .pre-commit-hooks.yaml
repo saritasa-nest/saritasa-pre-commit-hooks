@@ -5,3 +5,10 @@
     language: python
     stages: [pre-commit, pre-push, manual]
     require_serial: true
+
+-   id: jira-pre-commit
+    name: Jira Task ID in the commit message
+    description: Checks for Jira Task ID in the commit message
+    entry: jira-pre-commit
+    language: python
+    stages: [commit-msg]

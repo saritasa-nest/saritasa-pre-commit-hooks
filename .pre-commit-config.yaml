@@ -66,12 +66,22 @@ repos:
       - id: djjs
         args: [ "--tabwidth=2" ]
 
-  - repo: https://github.com/pycqa/docformatter
-    rev: v1.7.3
+  # - repo: https://github.com/pycqa/docformatter
+  #   rev: v1.7.3
+  #   hooks:
+  #     - id: docformatter
+  #       args: [
+  #         --wrap-descriptions=0,
+  #         --in-place,
+  #         --blank
+  #       ]
+
+  - repo: local
     hooks:
-      - id: docformatter
-        args: [
-          --wrap-descriptions=0,
-          --in-place,
-          --blank
-        ]
+      - id: jira-pre-commit
+        name: Check for Jira Task ID in commit message
+        entry: python -m pre_commit_hooks.check_jira_pre_commit
+        language: python
+        stages:
+          - commit-msg
+        verbose: true
