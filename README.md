@@ -118,8 +118,6 @@ repos:
     rev: 0.0.2
     hooks:
       - id: add-task-number
-        stages:
-          - commit-msg
         # To check logs about which task was appended to commit message
         verbose: true
         args:
