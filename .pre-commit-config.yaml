@@ -1,3 +1,4 @@
+---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -8,7 +9,8 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: detect-aws-credentials
-        args: [--allow-missing-credentials]
+        args:
+          - --allow-missing-credentials
       - id: pretty-format-json
       - id: debug-statements
       - id: check-merge-conflict
@@ -25,26 +27,25 @@ repos:
     hooks:
       - id: flake8
         exclude: node_modules|migrations|scripts|.venv|__init__.py
-        additional_dependencies: [
+        additional_dependencies:
           # A plugin for Flake8 finding likely bugs and design problems in your program.
           # https://github.com/PyCQA/flake8-bugbear
-          flake8-bugbear,
+          - flake8-bugbear
           # Extension to enforce better comma placement.
           # https://github.com/PyCQA/flake8-commas
-          flake8-commas,
+          - flake8-commas
           # A flake8 plugin checking common style issues or inconsistencies with pytest-based tests.
           # https://github.com/m-burst/flake8-pytest-style
-          flake8-pytest-style,
+          - flake8-pytest-style
           # A flake8 plugin that warn about backslashes usage.
           # https://github.com/wemake-services/flake8-broken-line
-          flake8-broken-line,
+          - flake8-broken-line
           # A simple module that adds an extension for the fantastic pydocstyle tool to flake8.
           # https://github.com/PyCQA/flake8-docstrings
-          flake8-docstrings,
+          - flake8-docstrings
           # McCabe complexity checker.
           # https://github.com/PyCQA/mccabe
-          mccabe,
-        ]
+          - mccabe
 
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v3.0.0
@@ -52,20 +53,24 @@ repos:
       - id: add-trailing-comma
 
   - repo: https://github.com/jorisroovers/gitlint
-    rev:  v0.19.1
+    rev: v0.19.1
     hooks:
-    -   id: gitlint
+      - id: gitlint
 
   - repo: https://github.com/rtts/djhtml
     rev: 3.0.6
     hooks:
       - id: djhtml
-        args: [ "--tabwidth=2" ]
+        args:
+          - --tabwidth=2
       - id: djcss
-        args: [ "--tabwidth=2" ]
+        args:
+          - --tabwidth=2
       - id: djjs
-        args: [ "--tabwidth=2" ]
+        args:
+          - --tabwidth=2
 
+  # Uncomment when https://github.com/PyCQA/docformatter/issues/293 is fixed
   # - repo: https://github.com/pycqa/docformatter
   #   rev: v1.7.3
   #   hooks:
@@ -80,7 +85,7 @@ repos:
     hooks:
       - id: jira-pre-commit
         name: Check for Jira Task ID in commit message
-        entry: python -m pre_commit_hooks.check_jira_pre_commit
+        entry: python -m pre_commit_hooks.jira_pre_commit.main
         language: python
         stages:
           - commit-msg
