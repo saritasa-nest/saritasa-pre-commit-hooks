@@ -23,8 +23,8 @@ def test_no_task_in_commit_message(commit_msg_file, capsys):
     assert ERROR_MSG in out
 
 
-def test_inavlid_commit_message(commit_msg_file, capsys):
-    """Test that a commit message with an inavlid JIRA ID fails and prints the expected error message."""
+def test_invalid_commit_message(commit_msg_file, capsys):
+    """Test that a commit message with an invalid JIRA ID fails and prints the expected error message."""
     path = commit_msg_file("feat: update login jira1234")
 
     exit_code = validate_task_in_commit(path, [])
