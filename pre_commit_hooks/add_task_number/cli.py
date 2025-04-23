@@ -12,8 +12,7 @@ def parse_args(argv=None):
     )
 
     parser.add_argument(
-        "filenames",
-        nargs="+",
+        "commit_msg",
         help="Path to `COMMIT_EDITMSG` file.",
     )
     parser.add_argument(
@@ -47,7 +46,7 @@ def main(argv=None):
         .decode("unicode_escape")  # argparse escapes backslash by default
     )
 
-    add_task_number(args.filenames[0], args.branch_regex, format_template)
+    add_task_number(args.commit_msg, args.branch_regex, format_template)
 
 
 if __name__ == "__main__":
