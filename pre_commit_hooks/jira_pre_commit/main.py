@@ -5,34 +5,38 @@ import io
 import re
 import sys
 
-# Regex pattern to match a JIRA Task ID (e.g. SD-373)
-GIT_COMMIT_REGEX = re.compile(r"(?<![A-Z])[A-Z]{2,11}(?![A-Z])-(?<![0-9])[0-9]{1,6}(?![0-9])")
 # Error message printed when no JIRA Task ID is found
-ERROR_MSG = "[ERROR] Aborting commit. Your commit message is missing a Jira Task ID, i.e. JIRA-1234."
+NO_TASK_ERROR_MSG = "[ERROR] Aborting commit. Your commit message is missing a Jira Task ID, i.e. JIRA-1234."
+# Error message when the regex is inavlid
+INVALID_REGEX_ERROR_MSG = "[ERROR] Invalid regex '{pattern}': {error}"
+# Message about excluded commit messsage
+EXCLUDED_COMMIT_MSG = "Commit matches exclude pattern '{pattern}', skipping JIRA check."
+
+# Regex pattern to match a JIRA Task ID (e.g. SD-373)
+GIT_COMMIT_REGEX = re.compile(r"[A-Z]+-[0-9]+")
 
 
 def parse_args(argv=None):
     """Provide CLI for jira_pre_commit hook."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "filename",
+        "commit_filename",
         nargs=1,
         help="Path to `COMMIT_EDITMSG` file.",
     )
     parser.add_argument(
         "--exclude-pattern", "-e",
         action="append",
-        default=['^Merge '],
         help=(
             "Regex to exclude commit messages from Jira Task ID check. "
-            "Can be specified multiple times. Default is '^Merge '."
+            "Can be specified multiple times."
         ),
     )
 
     return parser.parse_args(argv)
 
 
-def check_exclusions(commit_message: str, patterns: list) -> int:
+def is_commit_excluded(commit_message: str, patterns: list[str]) -> bool:
     """
     Check if commit message should be excluded from the Jira Task ID check.
 
@@ -41,31 +45,31 @@ def check_exclusions(commit_message: str, patterns: list) -> int:
         patterns: list of regex patterns to check commit message against
 
     Returns:
-        (int): whether commit message matches the exclusion pattern
+        (bool): whether commit message matches the exclusion pattern
     """
     for pattern in patterns:
         try:
             if re.search(pattern, commit_message):
-                print(f"Commit matches exclude pattern '{pattern}', skipping JIRA check.")
-                return 1
+                print(EXCLUDED_COMMIT_MSG.format(pattern=pattern))
+                return True
         except re.PatternError as e:
-            print(f"[ERROR] Invalid regex '{pattern}': {e}")
+            print(INVALID_REGEX_ERROR_MSG.format(pattern=pattern, error=e))
             sys.exit(1)
-    return 0
+    return False
 
 
-def validate_task_in_commit(filename: str, exclude_patterns: list) -> int:
+def validate_task_in_commit(commit_filename: str, exclude_patterns: list) -> int:
     """
     Check commit message for Jira Task ID, unless it matches an exclusion pattern.
 
     Args:
-        filename: path to the `COMMIT_EDITMSG` file
+        commit_filename: path to the `COMMIT_EDITMSG` file
         exclude_patterns: list of regex patterns to check commit message against
 
     Returns:
         (int): 0 if validation passes or skipped, 1 if validation fails
     """
-    with io.open(filename, "r") as commit_message_file:
+    with io.open(commit_filename, "r") as commit_message_file:
         commit_message = commit_message_file.read()
 
     # Strip commit message from comment lines (usually added by `git rebase` or `git commit --amend`)
@@ -75,12 +79,12 @@ def validate_task_in_commit(filename: str, exclude_patterns: list) -> int:
     commit_message = "\n".join(non_comment_lines)
 
     # If any exclusion pattern matches, skip Jira checks
-    if exclude_patterns and check_exclusions(commit_message, exclude_patterns):
+    if exclude_patterns and is_commit_excluded(commit_message, exclude_patterns):
         return 0
 
     match = re.search(GIT_COMMIT_REGEX, commit_message)
     if not match:
-        print(ERROR_MSG)
+        print(NO_TASK_ERROR_MSG)
         return 1
 
     # If commit message has a Jira Task ID
@@ -98,7 +102,7 @@ def main(argv=None) -> int:
         (int): exit code for the hook
     """
     args = parse_args(argv)
-    return validate_task_in_commit(args.filename[0], args.exclude_pattern)
+    return validate_task_in_commit(args.commit_filename[0], args.exclude_pattern)
 
 
 if __name__ == "__main__":

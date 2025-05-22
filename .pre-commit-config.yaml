@@ -90,3 +90,6 @@ repos:
         stages:
           - commit-msg
         verbose: true
+        # args:
+        #   - --exclude-pattern
+        #   - '^Merge( '
