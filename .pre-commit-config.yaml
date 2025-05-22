@@ -52,6 +52,15 @@ repos:
     hooks:
       - id: add-trailing-comma
 
+  - repo: local
+    hooks:
+    -   id: add-task-number
+        name: add task number
+        entry: python -m pre_commit_hooks.add_task_number.cli
+        language: python
+        stages: [commit-msg]
+        verbose: true
+
   - repo: https://github.com/jorisroovers/gitlint
     rev: v0.19.1
     hooks:

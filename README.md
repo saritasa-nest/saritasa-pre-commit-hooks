@@ -28,7 +28,7 @@ location ~ ^/(app/|vendor|src|tests|vagrant|docs|phpunit|svn|git|docker|migratio
 
 1. You can specify custom nginx config file and location `--nginx_config_path=custom.conf`  in case if it is different from `./nginx.conf`
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -42,7 +42,7 @@ repos:
 
 Examples:
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -57,7 +57,7 @@ repos:
 
 Examples:
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -74,7 +74,7 @@ Please keep in mind that in case if you messed default locations denies values, 
 
 Examples:
 
-```.pre-commit-config.yaml
+```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.2
@@ -90,6 +90,40 @@ Please note that by default there are always ignored errors with these keywords:
 Thiey are ignored because sometimes project's nginx config file may contain `include` directives to files without their real presence in the repo (these files are added as [nginx defaults](https://github.com/nginx/nginx/tree/master/conf) during installation) and can be ignored during pre-commit hook processing.
 
 This is it!
+
+### `add_task_number`
+
+Provide task number to commit automatically. It takes task number from branch's name, so branch should have pre-defined
+format in order this hook to work.
+
+#### Examples
+
+Commit message: `My beautiful message`
+Branch name: `feature/ABC-123-my-branch`
+
+Then branch name will be parsed according to `branch-regex` argument (`(feature|fix)/(?P<task>[A-Z0-9]+-[0-9]+)-.*` by default) and task number will be retrieved from branch name. In this case task number is `ABC-123`
+Then this task number will be automatically appended to commit message according to `format` argument
+(`{message}\\n\\nTask: {task}` by default), so result message will be
+```
+My beautiful message
+
+Task: ABC-123
+```
+
+Example of what should be added to `.pre-commit-config.yaml`
+
+```yaml
+repos:
+  - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+    rev: 0.0.2
+    hooks:
+      - id: add-task-number
+        # To check logs about which task was appended to commit message
+        verbose: true
+        args:
+          - "--branch-regex=feature/(?P<task>[A-Z]{2,11}-[0-9]{1,6})-.*"
+          - "--format={message}\\n\\nTask: {task}"
+```
 
 ### `jira-pre-commit`
 

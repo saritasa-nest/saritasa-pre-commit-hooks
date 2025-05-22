@@ -11,6 +11,14 @@
     - manual
   require_serial: true
 
+- id: add-task-number
+  name: add-task-number
+  entry: add-task-number
+  language: python
+  description: pre-commit hook for adding issue task number to your git commit messages
+  stages:
+    - commit-msg
+
 - id: jira-pre-commit
   name: Jira Task ID in the commit message
   description: Checks for Jira Task ID in the commit message
