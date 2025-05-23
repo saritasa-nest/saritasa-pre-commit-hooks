@@ -58,7 +58,8 @@ repos:
         name: add task number
         entry: python -m pre_commit_hooks.add_task_number.cli
         language: python
-        stages: [commit-msg]
+        stages:
+          - commit-msg
         verbose: true
 
   - repo: https://github.com/jorisroovers/gitlint
@@ -99,6 +100,6 @@ repos:
         stages:
           - commit-msg
         verbose: true
-        # args:
-        #   - --exclude-pattern
-        #   - '^Merge( '
+        args:
+          - --exclude-pattern
+          - '^Merge '

@@ -58,7 +58,7 @@ def test_multiline_commit_message(commit_msg_file, capsys):
     exit_code = validate_task_in_commit(path, [])
     assert exit_code == 0
 
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
     assert out == ""
 
 
