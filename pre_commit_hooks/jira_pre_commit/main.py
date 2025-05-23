@@ -11,13 +11,20 @@ NO_TASK_ERROR_MSG = "[ERROR] Aborting commit. Your commit message is missing a J
 INVALID_REGEX_ERROR_MSG = "[ERROR] Invalid regex '{pattern}': {error}"
 # Message about excluded commit messsage
 EXCLUDED_COMMIT_MSG = "Commit matches exclude pattern '{pattern}', skipping JIRA check."
-
 # Regex pattern to match a JIRA Task ID (e.g. SD-373)
-GIT_COMMIT_REGEX = re.compile(r"[A-Z]+-[0-9]+")
+GIT_COMMIT_REGEX = re.compile(r"[A-Z][A-Z0-9]+-\d+")
 
 
 def parse_args(argv=None):
-    """Provide CLI for jira_pre_commit hook."""
+    """Parse CLI arguments for jira-pre-commit hook.
+
+    Args:
+      argv: optional list of command-line arguments (default: sys.argv)
+
+    Returns:
+      parsed arguments including commit_filename and exclude_pattern
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "commit_filename",
@@ -37,8 +44,7 @@ def parse_args(argv=None):
 
 
 def is_commit_excluded(commit_message: str, patterns: list[str]) -> bool:
-    """
-    Check if commit message should be excluded from the Jira Task ID check.
+    """Check if commit message should be excluded from the Jira Task ID check.
 
     Args:
         commit_message: commit message text
@@ -46,6 +52,7 @@ def is_commit_excluded(commit_message: str, patterns: list[str]) -> bool:
 
     Returns:
         (bool): whether commit message matches the exclusion pattern
+
     """
     for pattern in patterns:
         try:
@@ -59,8 +66,7 @@ def is_commit_excluded(commit_message: str, patterns: list[str]) -> bool:
 
 
 def validate_task_in_commit(commit_filename: str, exclude_patterns: list) -> int:
-    """
-    Check commit message for Jira Task ID, unless it matches an exclusion pattern.
+    """Check commit message for Jira Task ID, unless it matches an exclusion pattern.
 
     Args:
         commit_filename: path to the `COMMIT_EDITMSG` file
@@ -68,6 +74,7 @@ def validate_task_in_commit(commit_filename: str, exclude_patterns: list) -> int
 
     Returns:
         (int): 0 if validation passes or skipped, 1 if validation fails
+
     """
     with io.open(commit_filename, "r") as commit_message_file:
         commit_message = commit_message_file.read()
@@ -92,14 +99,14 @@ def validate_task_in_commit(commit_filename: str, exclude_patterns: list) -> int
 
 
 def main(argv=None) -> int:
-    """
-    Parse CLI args and run Jira Task ID validation on the commit message. Exit with code 0 on success, 1 on failure.
+    """Parse CLI args and run Jira Task ID validation on the commit message.
 
     Args:
         argv: command-line args
 
     Returns:
-        (int): exit code for the hook
+        (int): 0 if validation passes or excluded, 1 otherwise
+
     """
     args = parse_args(argv)
     return validate_task_in_commit(args.commit_filename[0], args.exclude_pattern)
