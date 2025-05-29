@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 from typing import Any
 
@@ -76,3 +77,41 @@ def get_git_config_param(param: str) -> str | None:
         return cmd_output("git", "config", "--get", param)
     except RuntimeError:
         return None
+
+
+GIT_COMMENT_STRING = (
+    get_git_config_param("core.commentString")
+    or get_git_config_param("core.commentChar")
+    or "#"
+)
+GIT_COMMENT_SECTION_LINE = (
+    r"{comment_string}?[ ]*-+ >8 -+".format(comment_string=GIT_COMMENT_STRING)
+)
+
+
+def strip_comment_section(message: str) -> str:
+    """Return message without comment section which is located bellow the line.
+
+    All bellow this line will be ignored including task number. So need to
+    strip it to avoid appending of task number bellow this line.
+
+    Example:
+    ```
+    My beautiful commit message
+
+    ------------------------ >8 ------------------------
+
+    This is considered a comment section by git, so everything bellow the line
+    will be ignored. We need to cut if off before appending task number,
+    because otherwise task number will be appended bellow this line and, thus,
+    it will be cut off.
+
+    ```
+
+    """
+    match = re.search(GIT_COMMENT_SECTION_LINE, message)
+
+    if match is not None:
+        return message[:match.start()]
+
+    return message

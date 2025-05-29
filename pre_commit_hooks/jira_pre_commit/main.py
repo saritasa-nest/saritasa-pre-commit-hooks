@@ -5,6 +5,8 @@ import io
 import re
 import sys
 
+from pre_commit_hooks.util import GIT_COMMENT_STRING, strip_comment_section
+
 # Error message printed when no JIRA Task ID is found
 NO_TASK_ERROR_MSG = "[ERROR] Aborting commit. Your commit message is missing a Jira Task ID, i.e. JIRA-1234."
 # Error message when the regex is inavlid
@@ -12,7 +14,7 @@ INVALID_REGEX_ERROR_MSG = "[ERROR] Invalid regex '{pattern}': {error}"
 # Message about excluded commit messsage
 EXCLUDED_COMMIT_MSG = "Commit matches exclude pattern '{pattern}', skipping JIRA check."
 # Regex pattern to match a JIRA Task ID (e.g. SD-373)
-GIT_COMMIT_REGEX = re.compile(r"[A-Z][A-Z0-9]+-\d+")
+JIRA_TASK_REGEX = re.compile(r"[A-Z][A-Z0-9]+-\d+")
 
 
 def parse_args(argv=None):
@@ -22,7 +24,7 @@ def parse_args(argv=None):
       argv: optional list of command-line arguments (default: sys.argv)
 
     Returns:
-      parsed arguments including commit_filename and exclude_pattern
+      argparse.Namespace object: parsed arguments including commit_filename and exclude_pattern
 
     """
     parser = argparse.ArgumentParser()
@@ -78,19 +80,20 @@ def validate_task_in_commit(commit_filename: str, exclude_patterns: list) -> int
     """
     with io.open(commit_filename, "r") as commit_message_file:
         commit_message = commit_message_file.read()
+        commit_message = strip_comment_section(commit_message)
+        commit_message = commit_message.strip()
 
     # Strip commit message from comment lines (usually added by `git rebase` or `git commit --amend`)
     # To avoid false positives (i.e. there could be a Jira ID in the comments, but not in the actual commit message)
     lines = commit_message.splitlines()
-    non_comment_lines = [line for line in lines if not line.startswith('#')]
+    non_comment_lines = [line for line in lines if not line.startswith(GIT_COMMENT_STRING)]
     commit_message = "\n".join(non_comment_lines)
 
     # If any exclusion pattern matches, skip Jira checks
-    if exclude_patterns and is_commit_excluded(commit_message, exclude_patterns):
+    if is_commit_excluded(commit_message, exclude_patterns):
         return 0
 
-    match = re.search(GIT_COMMIT_REGEX, commit_message)
-    if not match:
+    if not re.search(JIRA_TASK_REGEX, commit_message):
         print(NO_TASK_ERROR_MSG)
         return 1
 
