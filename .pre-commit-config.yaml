@@ -91,15 +91,8 @@ repos:
   #         --blank
   #       ]
 
-  - repo: local
+  - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+    rev: 0.0.4
     hooks:
       - id: jira-pre-commit
-        name: Check for Jira Task ID in commit message
-        entry: python -m pre_commit_hooks.jira_pre_commit.main
-        language: python
-        stages:
-          - commit-msg
         verbose: true
-        args:
-          - --exclude-pattern
-          - '^Merge '

@@ -90,7 +90,7 @@ def validate_task_in_commit(commit_filename: str, exclude_patterns: list) -> int
     commit_message = "\n".join(non_comment_lines)
 
     # If any exclusion pattern matches, skip Jira checks
-    if is_commit_excluded(commit_message, exclude_patterns):
+    if exclude_patterns and is_commit_excluded(commit_message, exclude_patterns):
         return 0
 
     if not re.search(JIRA_TASK_REGEX, commit_message):

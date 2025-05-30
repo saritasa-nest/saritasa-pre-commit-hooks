@@ -141,9 +141,8 @@ repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
     rev: 0.0.4
     hooks:
-      - id: jira_pre_commit
-        stages:
-          - commit-msg
+      - id: jira-pre-commit
+        verbose: true
         args:
           - --exclude-pattern
           - '^draft: '
