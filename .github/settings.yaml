@@ -1,0 +1,34 @@
+repository:
+  description: Repository to store different Saritasa git pre-commit hooks
+
+labels:
+  - name: Needs Review
+    color: 008000
+    description: Ready for review
+
+  - name: wip
+    color: cc0000
+    description: In development
+
+  - name: enhancement
+    color: F0F8FF
+    description: New feature or request
+
+  - name: docs
+    color: EED9C4
+    description: Improvements or additions to documentation
+
+  - name: bug
+    color: 848482
+    description: Something isn't working
+
+  - name: urgent
+    color: C41E3A
+    description: Urgently for review
+
+autolinks:
+  - key_prefix: SD
+    url_template: https://saritasa.atlassian.net/browse/SD-<num>
+
+pr_workflow_type:
+  devops

@@ -1,14 +1,28 @@
--   id: check-nginx-wide-range
-    name: check wide `try_files` directive
-    description: prevents from committing nginx configs with wide `try_files` directives without disabled locations
-    entry: check-nginx-wide-range
-    language: python
-    stages: [pre-commit, pre-push, manual]
-    require_serial: true
+---
+- id: check-nginx-wide-range
+  name: check wide `try_files` directive
+  description: prevents from committing nginx configs with wide `try_files` directives
+    without disabled locations
+  entry: check-nginx-wide-range
+  language: python
+  stages:
+    - pre-commit
+    - pre-push
+    - manual
+  require_serial: true
 
--   id: add-task-number
-    name: add-task-number
-    entry: add-task-number
-    language: python
-    description: pre-commit hook for adding issue task number to your git commit messages
-    stages: [commit-msg]
+- id: add-task-number
+  name: add-task-number
+  entry: add-task-number
+  language: python
+  description: pre-commit hook for adding issue task number to your git commit messages
+  stages:
+    - commit-msg
+
+- id: jira-pre-commit
+  name: Jira Task ID in the commit message
+  description: Checks for Jira Task ID in the commit message
+  entry: jira-pre-commit
+  language: python
+  stages:
+    - commit-msg
