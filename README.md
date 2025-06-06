@@ -194,6 +194,37 @@ Prevent any force (non-fast-forward) push to a Git repository.
 - Fails the push with an error if it's a force push, that would rewrite history (non-fast-forward).
 - Skips checks for branch deletions and new branches.
 
+### How it works
+
+When you run `git push`, git calls the `pre-push` hook with two parameters (remote name and remote URL).
+
+Information about the commits which are being pushed is supplied as lines to the standard input in the form:
+
+`<local_ref> <local_sha> <remote_ref> <remote_sha>`
+
+For more info on git's pre-push hook, see [official githooks documentation](https://git-scm.com/docs/githooks#_pre_push)
+
+Then the hook computes the SHA for an empty blob via `git hash-object --stdin < /dev/null` to get the exact length of the hash object. This is done in order not to hardcode a string of 40 zeroes (it's 40 digits for SHA-1, but what if the algorithm changes).
+
+And then the hook replaces all the hex digits in that result with `0` to form a "zero SHA" of the same length.
+
+The "zero SHA" is then compared to indicate the:
+
+- Branch deletion, if `local_sha == zero_sha`
+- Or a new branch creation, if `remote_sha == zero_sha`.
+
+In both of these cases, the hook skips future checks (because deleting or creating a new branch cannot rewrite remote history).
+
+And for any other update (in the case, where both `local_sha` and `remote_sha` are non-zero) the hook runs `git merge-base --is-ancestor <remote_sha> <local_sha>` to get if the `remote_sha` is an ancestor of `local_sha`.
+
+If it exits with code `0`, it means that `remote_sha` is an ancestor of `local_sha`. Which means, that this was a fast-forward update, and the push will be allowed.
+
+If it exits with code `1`, it means that `remote_sha` is not an ancestor of `local_sha`. Which indicates that this was a force (non-fast-forward) push, the push is rejected, printing an error message:
+
+- **[ERROR] Refusing force (non-fast-forward) push on refs/heads/main.**
+
+For more info on git merge-base --is-ancestor, see the [official git-merge-base documentation](https://git-scm.com/docs/git-merge-base#Documentation/git-merge-base.txt---is-ancestor)
+
 ### Hook usage example
 
 Example of what should be added to `.pre-commit-config.yaml`:
@@ -205,6 +236,12 @@ repos:
     hooks:
       - id: prevent-force-push
         verbose: true
+```
+
+And make sure the pre-push hook is installed locally by running:
+
+```sh
+pre-commit install --hook-type pre-push
 ```
 
 ### Examples
