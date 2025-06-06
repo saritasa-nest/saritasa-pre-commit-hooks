@@ -96,3 +96,13 @@ repos:
     hooks:
       - id: jira-pre-commit
         verbose: true
+
+  - repo: local
+    hooks:
+    -   id: prevent-force-push
+        name: Prevent git push --force
+        entry: python -m pre_commit_hooks.prevent_force_push.main
+        language: python
+        stages:
+          - pre-push
+        verbose: true

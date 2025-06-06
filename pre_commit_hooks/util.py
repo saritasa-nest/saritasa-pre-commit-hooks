@@ -18,6 +18,24 @@ def cmd_output(*cmd: str, retcode: int | None = 0, **kwargs: Any) -> str:
     return stdout
 
 
+def git_hash_object_stdin() -> str:
+    """Shortand for `git hash-object --stdin < /dev/null`."""
+    return cmd_output("git", "hash-object", "--stdin", stdin=subprocess.DEVNULL)
+
+
+def is_ancestor(ancestor: str, descendant: str) -> bool:
+    """Shortand for `git merge-base --is-ancestor <ancestor> <descendant>`.
+
+    Return True if <ancestor> is an ancestor of <descendant>.
+
+    """
+    try:
+        cmd_output("git", "merge-base", "--is-ancestor", ancestor, descendant, retcode=0)
+        return True
+    except RuntimeError:
+        return False
+
+
 def get_tests_assets_path(pre_commit_hook_name: str):
     """Get `tests/assets` folder path with different examples for tests."""
     return os.path.join(
