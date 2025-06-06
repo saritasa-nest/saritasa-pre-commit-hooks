@@ -186,3 +186,39 @@ Commits that match the passed `--exclude-patterns` regex won't trigger the hook 
 In a case of an invalid regex of a provided pattern (i.e. unclosed brackets), hook will catch an error, fail and output below message with an actual regex error:
 
 - **[ERROR] Invalid regex 'bracket( ': missing ), unterminated subpattern**
+
+### `prevent-force-push`
+
+Prevent any force (non-fast-forward) push to a Git repository.
+
+- Fails the push with an error if it's a force push, that would rewrite history (non-fast-forward).
+- Skips checks for branch deletions and new branches.
+
+### Hook usage example
+
+Example of what should be added to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+    rev: 0.0.4
+    hooks:
+      - id: prevent-force-push
+        verbose: true
+```
+
+### Examples
+
+#### Fast-forward push
+
+If the `origin/main` branch is at commit `A`, and your local `main` has a commit `B` (where `A` is an ancestor of `B`).
+
+Executing the `git push origin main` command will result in a succesful push. No error will be printed.
+
+#### Force push
+
+Now, if the `origin/main` is at commit `X`, and your local `main` points to the commit `Y` (where `X` is not an ancestor of `Y`, so, a non-fast-forward update). Like, if you did a `git rebase -i` and, for example, squashed commits that are now on the remote.
+
+Running `git push --force origin main` will result in a below error message and the push will be aborted:
+
+- **[ERROR] Refusing force (non-fast-forward) push on refs/heads/main.**

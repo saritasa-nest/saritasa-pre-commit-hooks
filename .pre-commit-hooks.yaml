@@ -26,3 +26,11 @@
   language: python
   stages:
     - commit-msg
+
+- id: prevent-force-push
+  name: Prevent git push --force
+  description: Prevents git push with the --force flag
+  entry: prevent-force-push
+  language: python
+  stages:
+    - pre-push
