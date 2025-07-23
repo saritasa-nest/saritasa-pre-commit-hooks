@@ -1,3 +1,4 @@
 crossplane
-pytest
 isort
+pytest
+pyyaml

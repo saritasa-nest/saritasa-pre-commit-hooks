@@ -26,3 +26,18 @@
   language: python
   stages:
     - commit-msg
+
+- id: kyverno-test
+  name: Kyverno test
+  description: Runs and validates Kyverno policy tests
+  entry: kyverno-test
+  language: python
+  always_run: true
+  pass_filenames: false
+  additional_dependencies:
+    - PyYAML
+  stages:
+    - pre-commit
+    - pre-push
+    - manual
+  require_serial: true

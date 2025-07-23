@@ -115,3 +115,19 @@ def strip_comment_section(message: str) -> str:
         return message[:match.start()]
 
     return message
+
+
+def get_changed_files() -> set[str]:
+    """Retrieves a set of all staged files except the deleted ones."""
+    cmd = (
+        'git', 'diff', '--staged', '--name-only', '--no-ext-diff',
+        # D (Deleted) is excluded
+        '--diff-filter=ACMRTUXB'
+    )
+    return set(cmd_output(*cmd).splitlines())
+
+
+def get_deleted_files() -> set[str]:
+    """Retrieves a set of the deleted staged files."""
+    cmd = ('git', 'diff', '--staged', '--name-only', '--no-ext-diff', '--diff-filter=D')
+    return set(cmd_output(*cmd).splitlines())
