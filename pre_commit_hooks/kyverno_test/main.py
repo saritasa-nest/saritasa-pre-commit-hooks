@@ -96,8 +96,13 @@ class Hook:
             KyvernoTestError: If any error or warning is encountered, including test failure.
         """
         command = [
-            "kyverno", "test", "--require-tests", "--detailed-results", "--fail-only",
-            "--file-name", self.context.test_filename
+            "kyverno",
+            "test",
+            "--require-tests",
+            "--detailed-results",
+            "--fail-only",
+            "--file-name",
+            self.context.test_filename
         ]
         command.extend(self.context.extra_arguments)
         command.append(path)
@@ -120,18 +125,17 @@ class Hook:
         Returns:
             An exit code of the hook, zero on success.
         """
-        if strict:
-            try:
+        try:
+            if strict:
                 Validator(self.context).validate()
-            except ValidationError as e:
-                print(f"Validation error: {e}")
-                return 1
-        for target in self._find_targets():
-            try:
+            for target in self._find_targets():
                 self._kyverno_test(Path(self.context.tests_directory, target))
-            except KyvernoTestError as e:
-                print("", f"Failure @ {e.path}:", e.output.decode(), sep="\n", end="")
-                return 1
+        except ValidationError as e:
+            print(f"Validation error: {e}")
+            return 1
+        except KyvernoTestError as e:
+            print("", f"Failure @ {e.path}:", e.output.decode(), sep="\n", end="")
+            return 1
         return 0
 
 
