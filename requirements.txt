@@ -1,4 +1,3 @@
 crossplane
 isort
 pytest
-pyyaml

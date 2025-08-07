@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 
 from pre_commit_hooks import util
-from pre_commit_hooks.kyverno_test.context import Context
-from pre_commit_hooks.kyverno_test.exceptions import ValidationError
-from pre_commit_hooks.kyverno_test.main import Hook
-from pre_commit_hooks.kyverno_test.validator import Validator
+from pre_commit_hooks.kubernetes.kyverno_test.context import Context
+from pre_commit_hooks.kubernetes.kyverno_test.exceptions import ValidationError
+from pre_commit_hooks.kubernetes.kyverno_test.main import Hook
+from pre_commit_hooks.kubernetes.kyverno_test.validator import Validator
 
 
 @pytest.fixture
@@ -29,6 +29,14 @@ def hook():
 def validator(hook):
     """Constructs a validator."""
     return Validator(hook.context)
+
+
+@pytest.fixture
+def temp_git_dir(tmpdir):
+    """Prepare a temporary Git repository."""
+    git_dir = tmpdir.join("tmpgit")
+    util.git_init(git_dir)
+    return git_dir
 
 
 def _create_files(git_dir, *, commited=[], staged=[]):
@@ -58,7 +66,7 @@ def _delete_files(git_dir, files):
 
 def _prepare_assets(git_dir, assets_dir_name):
     """Prepares assets for the test."""
-    assets_root = util.get_tests_assets_path("kyverno-test")
+    assets_root = os.path.join(os.path.dirname(__file__), "assets")
     source = os.path.join(assets_root, assets_dir_name)
     shutil.copytree(source, git_dir, dirs_exist_ok=True)
     with git_dir.as_cwd():
@@ -97,9 +105,10 @@ def test_get_test_directory_name(hook):
     assert hook._get_test_directory_name("config/tests/prevent-injection/assets/misc/more.yaml") == "prevent-injection"
 
 
-def test_find_targets_in_unrelated_changes(temp_git_dir_with_files, hook):
+def test_find_targets_in_unrelated_changes(temp_git_dir, hook):
     """Tests target discovery in unrelated changes."""
-    with temp_git_dir_with_files.as_cwd():
+    with temp_git_dir.as_cwd():
+        _create_files(temp_git_dir, staged=["README.md"])
         assert hook._find_targets() == set()
 
 
