@@ -3,7 +3,7 @@
 ## Overview
 
 The conceptual overview and configuration details of the hook are available in
-the [shared documentation page](../../../README.md) for the hook collection.
+the [shared documentation page](../../../../README.md) for the hook collection.
 
 ## Development
 

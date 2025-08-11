@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 
 from pre_commit_hooks import util
-from pre_commit_hooks.kubernetes.kyverno_test.context import Context
-from pre_commit_hooks.kubernetes.kyverno_test.exceptions import ValidationError
-from pre_commit_hooks.kubernetes.kyverno_test.main import Hook
-from pre_commit_hooks.kubernetes.kyverno_test.validator import Validator
+from pre_commit_hooks.kubernetes.kyverno.kyverno_test.context import Context
+from pre_commit_hooks.kubernetes.kyverno.kyverno_test.exceptions import ValidationError
+from pre_commit_hooks.kubernetes.kyverno.kyverno_test.main import Hook
+from pre_commit_hooks.kubernetes.kyverno.kyverno_test.validator import Validator
 
 
 @pytest.fixture
