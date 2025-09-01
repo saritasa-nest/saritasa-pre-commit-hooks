@@ -31,7 +31,7 @@ location ~ ^/(app/|vendor|src|tests|vagrant|docs|phpunit|svn|git|docker|migratio
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.4
+    rev: 0.0.5
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -45,7 +45,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.4
+    rev: 0.0.5
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -60,7 +60,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.4
+    rev: 0.0.5
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -77,7 +77,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.4
+    rev: 0.0.5
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -115,7 +115,7 @@ Example of what should be added to `.pre-commit-config.yaml`
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.4
+    rev: 0.0.5
     hooks:
       - id: add-task-number
         # To check logs about which task was appended to commit message
@@ -139,7 +139,7 @@ Example of what should be added to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.4
+    rev: 0.0.5
     hooks:
       - id: jira-pre-commit
         verbose: true
@@ -186,3 +186,80 @@ Commits that match the passed `--exclude-patterns` regex won't trigger the hook 
 In a case of an invalid regex of a provided pattern (i.e. unclosed brackets), hook will catch an error, fail and output below message with an actual regex error:
 
 - **[ERROR] Invalid regex 'bracket( ': missing ), unterminated subpattern**
+
+### `kyverno-test`
+
+Run tests for Kyverno policies. The hook implements a target discovery mechanism to avoid running
+all tests on every commit. The test for a policy will be selected for running if:
+- the corresponding policy is added or changed;
+- a file related to the policy test is added, changed, or deleted.
+
+#### Configuration example
+
+The basic configuration for the hook has the following form:
+
+```yaml
+repos:
+  - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+    rev: 0.0.5
+    hooks:
+      - id: kyverno-test
+        args:
+          - --policies=config/kyverno/policies
+          - --tests=config/kyverno/tests
+```
+
+With the `--policies` (or `-p`) flag, the path to a directory containing Kyverno policy manifests is
+specified. The `--tests` (or `-t`) flag is used to set the path to a directory with policy tests.
+
+The hook assumes that:
+- policies directory contains YAML manifests;
+- tests directory contains subdirectories for policy tests (one subdirectory for each manifest in policies).
+
+To ignore a file or a subdirectory in policies directory, `--ignore-path` flag can be used, for example:
+
+```yaml
+- id: kyverno-test
+  args:
+    # ...
+    - --ignore-path=kustomization.yaml
+```
+
+If a custom name is used for Kyverno test manifest (instead of the default `kyverno-test.yaml`), one must
+account for that in the hook configuration:
+
+```yaml
+- id: kyverno-test
+  args:
+    # ...
+    - --test-filename=pt.yaml
+```
+
+It is also possible to specify additional arguments for `kyverno test`:
+
+```yaml
+- id: kyverno-test
+  args:
+    # ...
+    - --extra-args=-v=4 --remove-color=true --detailed-results=false
+```
+
+By default the hook fails on warnings, this can be disabled by specifying the following flag:
+
+```yaml
+- id: kyverno-test
+  args:
+    # ...
+    - --disable-fail-on-warnings
+```
+
+By default, the hook is executed in strict mode, which means running a validator to check that
+the test environment matches the hook's expectations. To completely disable validation, you can
+use the following flag.
+
+```yaml
+- id: kyverno-test
+  args:
+    # ...
+    - --disable-strict-mode
+```
