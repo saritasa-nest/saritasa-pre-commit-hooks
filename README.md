@@ -194,6 +194,10 @@ all tests on every commit. The test for a policy will be selected for running if
 - the corresponding policy is added or changed;
 - a file related to the policy test is added, changed, or deleted.
 
+> [!IMPORTANT]
+> The CLI tool for Kyverno must be available locally.
+> Learn about various installation methods in the [documentation](https://kyverno.io/docs/kyverno-cli/install/).
+
 #### Configuration example
 
 The basic configuration for the hook has the following form:
