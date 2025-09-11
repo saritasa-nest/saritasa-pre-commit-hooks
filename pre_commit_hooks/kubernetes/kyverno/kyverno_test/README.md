@@ -17,6 +17,15 @@ Install [pyenv](https://github.com/pyenv/pyenv#installation) and
 ➜ pyenv activate saritasa-pre-commit-hooks  # not necessary with shell integration
 ```
 
+The CLI tool for Kyverno must be available locally. It can be installed via `brew`:
+
+```
+➜ brew install kyverno
+```
+
+More installation options are described in the
+[documentation](https://kyverno.io/docs/kyverno-cli/install/).
+
 ### Dependencies
 
 The project dependencies can be installed by running the following command in

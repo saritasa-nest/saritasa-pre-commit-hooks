@@ -2,6 +2,7 @@ import argparse
 import subprocess
 from collections.abc import Sequence
 from pathlib import Path
+from shutil import which
 
 from pre_commit_hooks.util import get_changed_files, get_deleted_files
 
@@ -93,8 +94,11 @@ class Hook:
             path: A path to the test directory.
 
         Raises:
+            ValidationError: If kyverno CLI binary is not available locally.
             KyvernoTestError: If any error or warning is encountered, including test failure.
         """
+        if not which("kyverno"):
+            raise ValidationError("kyverno CLI tool is not available, see https://kyverno.io/docs/kyverno-cli/install/")
         command = [
             "kyverno",
             "test",
