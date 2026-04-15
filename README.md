@@ -267,3 +267,86 @@ use the following flag.
     # ...
     - --disable-strict-mode
 ```
+
+### `check-placeholders`
+
+Prevent committing files with unreplaced placeholder variables.
+
+The hook checks files passed by pre-commit for placeholder values defined in `placeholders.toml`.
+
+Supported placeholder styles:
+
+- kubernetes style: `$VAR`
+- terraform style: `__VAR__`
+
+By default, the hook checks both styles.
+
+If an unreplaced placeholder is found, the hook fails and outputs an error in the format:
+
+```sh
+filename:line:column: unreplaced placeholder <placeholder>
+```
+
+This format was chosen for convenience, because it becomes "clickable" in VScode, and takes you directly to the matched placeholder (with ctrl + click).
+
+#### Hook usage example
+
+The basic configuration for the hook has the following form:
+
+```yaml
+- repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+  rev: 0.0.7
+  hooks:
+    - id: check-placeholders
+```
+
+To check only for kubernetes-style placeholders:
+
+```yaml
+- id: check-placeholders
+  args:
+    - --mode=kubernetes
+```
+
+To check only for terraform-style placeholders:
+
+```yaml
+- id: check-placeholders
+  args:
+    - --mode=terraform
+```
+
+#### Examples
+
+The following example will fail the hook:
+
+```hcl
+eks_external_secrets_prefix_access = [
+  "__PROJECT_NAME__-staging",
+  "__PROJECT_NAME__-dev"
+]
+```
+
+With the following error:
+
+```sh
+terraform/terraform/staging/staging.tfvars:604:6: unreplaced placeholder __PROJECT_NAME__
+terraform/terraform/staging/staging.tfvars:605:6: unreplaced placeholder __PROJECT_NAME__
+```
+
+The following example will fail the hook:
+
+```yaml
+labels:
+  created-by: $CREATED_BY
+  ops-main: $CREATED_BY
+  ops-secondary: $OPS_SECONDARY
+```
+
+With the following error:
+
+```sh
+kubernetes/prod/argocd/apps/values.yaml:1909:13: unreplaced placeholder $CREATED_BY
+kubernetes/prod/argocd/apps/values.yaml:1910:11: unreplaced placeholder $CREATED_BY
+kubernetes/prod/argocd/apps/values.yaml:1911:16: unreplaced placeholder $OPS_SECONDARY
+```
