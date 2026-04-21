@@ -61,46 +61,51 @@ def load_variables() -> list[str]:
     return variables
 
 
-def get_patterns(variable: str, mode: str) -> list[str]:
-    """Build regex patterns for a variable based on the selected mode.
+def get_patterns(variables: list[str], mode: str) -> tuple(set[str], set[str]):
+    """Build sets for lookup based on the selected mode.
 
     Args:
       variable: placeholder from the placeholders.toml file, e.g. `DOMAIN`
       mode: selected matching mode, e.g. `kubernetes` or `terraform`
 
     Returns:
-      list[str]: list of compiled regex patterns for the requested mode
+      tuple: tuple of two sets - kubernetes and terraform placeholder names
 
     """
     # Escape the variable name for symbols like "-", e.g. in `HELM_ARGO-CD`
-    escaped = re.escape(variable)
-    patterns = []
+    # And sort by longest variable first (`PROJECT_NAME` matched before `PROJECT`)
+    escaped = sorted((re.escape(var) for var in variables), key=len, reverse=True)
+
+    kubernetes_regex = None
+    terraform_regex = None
 
     # Get patterns for variables of the `$VAR` type
     if mode in (MODE_KUBERNETES, MODE_BOTH):
-        patterns.append(
-            re.compile(rf"(\${escaped})"),
-        )
+        kubernetes_regex = re.compile(rf"\$({'|'.join(escaped)})")
 
     # Get patterns for variables of the `__VAR__` type
     if mode in (MODE_TERRAFORM, MODE_BOTH):
-        patterns.append(
-            re.compile(rf"(__{escaped}__)"),
-        )
+        terraform_regex = re.compile(rf"__({'|'.join(escaped)})__")
 
-    return patterns
+    return kubernetes_regex, terraform_regex
 
 
-def find_placeholder_match(filename: str, variables: list[str], mode: str) -> tuple(str, int, int):
+def find_placeholder_match(
+    filename: str,
+    kubernetes_regex: set[str],
+    terraform_regex: set[str],
+    mode: str,
+) -> tuple(str, int, int):
     """Iterate over file contents and return placeholder matches found in it.
 
     Args:
       filename: name of the file passed by pre-commit
-      variables: list of placeholder variables from placeholders.toml
+      kubernetes_regex: placeholder names allowed for kubernetes-style
+      terraform_regex: placeholder names allowed for terraform-style
       mode: mode passed by pre-commit to check
 
     Returns:
-      tuple: (matched_placeholder, line_number, column_number)
+      tuple: tuples of matched_placeholder, line_number, column_number
 
     """
     path = pathlib.Path(filename)
@@ -110,17 +115,14 @@ def find_placeholder_match(filename: str, variables: list[str], mode: str) -> tu
         with path.open(encoding="utf-8") as handle:
             # Read the file line by line, get line number and the whole line
             for line_number, raw_line in enumerate(handle, start=1):
-                line_text = raw_line.strip()
-                # Go through every configured placeholder
-                for variable in variables:
-                    # Build patterns for this placeholder, depending on the passed mode
-                    for pattern in get_patterns(variable, mode):
-                        # Find all matches of this pattern in the current line
-                        for match in pattern.finditer(line_text):
-                            matched_placeholder = match.group(1)
-                            column_number = match.start(1) + 1
-
-                            yield (matched_placeholder, line_number, column_number)
+                # Scan for kubernetes-style placeholders ($VAR)
+                if mode in (MODE_KUBERNETES, MODE_BOTH) and kubernetes_regex:
+                    for match in kubernetes_regex.finditer(raw_line):
+                        yield match.group(0), line_number, match.start(0) + 1
+                # Scan for terraform-style placeholders (__VAR__)
+                if mode in (MODE_TERRAFORM, MODE_BOTH) and terraform_regex:
+                    for match in terraform_regex.finditer(raw_line):
+                        yield match.group(0), line_number, match.start(0) + 1
     # Skip binary files
     except (UnicodeDecodeError, OSError):
         return
@@ -139,19 +141,13 @@ def check_files(filenames: list[str], mode: str) -> int:
     """
     # Load placeholder variables from the `placeholders.toml` file once
     variables = load_variables()
+    kubernetes_regex, terraform_regex = get_patterns(variables, mode)
     # Variable for file failures to show all errors in all files in one run
     has_errors = False
 
     for filename in filenames:
-        # Get all matches from one file in a list of tuples
-        matches = list(find_placeholder_match(filename, variables, mode))
-        if not matches:
-            continue
-
-        has_errors = True
-
-        # Go through all match tuples from the file
-        for placeholder, line, column in matches:
+        for placeholder, line, column in find_placeholder_match(filename, kubernetes_regex, terraform_regex, mode):
+            has_errors = True
             print(FOUND_PLACEHOLDER_MSG.format(filename=filename, line=line, column=column, placeholder=placeholder))
 
     return 1 if has_errors else 0
