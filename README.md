@@ -272,14 +272,9 @@ use the following flag.
 
 Prevent committing files with unreplaced placeholder variables.
 
-The hook checks files passed by pre-commit for placeholder values defined in `placeholders.toml`.
+By default hook checks files passed by pre-commit for placeholder values defined in `.placeholders`. The config file can be changed by passing a `--file=.new.placeholders` argument to the hook.
 
-Supported placeholder styles:
-
-- kubernetes style: `$VAR`
-- terraform style: `__VAR__`
-
-By default, the hook checks both styles.
+A regex template in a style of `--regex=\$({variables})` must be passed to the hook as an argument. The most important part of the passed regex is the `{variables}` as its what the hook looks for. You can pass any regex template style you would want the hook to look for in the repository, i.e. `regex=@@{variables}` will look for variables like `@@PROJECT`.
 
 If an unreplaced placeholder is found, the hook fails and outputs an error in the format:
 
@@ -291,29 +286,32 @@ This format was chosen for convenience, because it becomes "clickable" in VScode
 
 #### Hook usage example
 
-The basic configuration for the hook has the following form:
+The example configuration for the hook has the following form:
 
 ```yaml
 - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
   rev: 0.0.7
   hooks:
     - id: check-placeholders
+      args:
+        - --file=<YOUR_CONFIG>
+        - --regex=<YOUR_REGEX>
 ```
 
-To check only for kubernetes-style placeholders:
+To check only for kubernetes-style placeholders (`$DOMAIN`):
 
 ```yaml
 - id: check-placeholders
   args:
-    - --mode=kubernetes
+    - --regex=\$({variables})
 ```
 
-To check only for terraform-style placeholders:
+To check only for terraform-style placeholders (`__DOMAIN__`):
 
 ```yaml
 - id: check-placeholders
   args:
-    - --mode=terraform
+    - --regex=__({variables})__
 ```
 
 #### Examples
