@@ -79,10 +79,8 @@ def load_variables(variables_file: str) -> list[str]:
 def get_patterns(variables: list[str], regex_patterns: list[str]) -> list[str]:
     """Build patterns from the passed regexp config.
 
-    If a regexp contains `{variable}`, one pattern will be generated for every
-    variable from the variables file.
-
-    If a regexp does not contain `{variable}`, it will be compiled as-is.
+    If a regexp contains `{variable}`, patterns will be generated for every variable from the placeholders file.
+    If a regexp does not contain `{variable}`, it will be compiled as is.
 
     Args:
       variables: list of placeholder variable names from the variables file, e.g `DOMAIN`

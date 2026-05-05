@@ -274,7 +274,60 @@ Prevent committing files with unreplaced placeholder variables.
 
 By default hook checks files passed by pre-commit for placeholder values defined in `.placeholders`. The config file can be changed by passing a `--file=.new.placeholders` argument to the hook.
 
-A regex template in a style of `--regex=\$({variables})` must be passed to the hook as an argument. The most important part of the passed regex is the `{variables}` as its what the hook looks for. You can pass any regex template style you would want the hook to look for in the repository, i.e. `regex=@@{variables}` will look for variables like `@@PROJECT`.
+At least one `--regex` argument must be passed to the hook. The regex must be a valid Python regular expression.
+
+You can test regexes online here: [regex101.com](https://regex101.com/).
+
+The hook supports two regex styles:
+
+#### Regex with {variable}
+
+If the regex contains `{variable}`, the hook replaces it with each variable from the placeholders file.
+
+For example, with `.placeholders` file that contains:
+
+```sh
+DOMAIN
+PROJECT_NAME
+ENVIRONMENT
+```
+
+And this hook config:
+
+```yaml
+args:
+  - "--file=.placeholders"
+  - "--regex=__{variable}__"
+```
+
+The hook will be looking for the following unreplaced placeholders:
+
+```sh
+__DOMAIN__
+__PROJECT_NAME__
+__ENVIRONMENT__
+```
+
+#### Regexes without {variable}
+
+If the regex does not contain `{variable}`, it is compiled and used as is.
+
+For example:
+
+```yaml
+args:
+  - "--regex=@[A-Z-_]+"
+```
+
+The hook will detect:
+
+```sh
+@TEST_VAR
+@VAR-TEST
+@FOO
+```
+
+Multiple `--regex` arguments can be passed. This allows checking several placeholder formats at once.
 
 If an unreplaced placeholder is found, the hook fails and outputs an error in the format:
 
@@ -294,24 +347,76 @@ The example configuration for the hook has the following form:
   hooks:
     - id: check-placeholders
       args:
-        - --file=<YOUR_CONFIG>
-        - --regex=<YOUR_REGEX>
+        - "--file=<YOUR_CONFIG>"
+        - "--regex=<YOUR_REGEX>"
 ```
 
-To check only for kubernetes-style placeholders (`$DOMAIN`):
+To check only for kubernetes-style placeholders, such as `$DOMAIN`:
 
 ```yaml
 - id: check-placeholders
   args:
-    - --regex=\$({variables})
+    - "--file=.placeholders"
+    - "--regex=\\${variable}"
 ```
 
-To check only for terraform-style placeholders (`__DOMAIN__`):
+This detects:
+
+```sh
+$DOMAIN
+$PROJECT_NAME
+$ENVIRONMENT-test
+```
+
+As:
+
+```sh
+$DOMAIN
+$PROJECT_NAME
+$ENVIRONMENT
+```
+
+To check only for terraform-style placeholders(`__DOMAIN__`):
 
 ```yaml
 - id: check-placeholders
   args:
-    - --regex=__({variables})__
+    - "--file=.placeholders"
+    - "--regex=__{variable}__"
+```
+
+This detects:
+
+```sh
+__DOMAIN__
+__PROJECT_NAME__
+__ENVIRONMENT__-test
+```
+
+As:
+
+```sh
+__DOMAIN__
+__PROJECT_NAME__
+__ENVIRONMENT__
+```
+
+To check for both styles:
+
+```yaml
+- id: check-placeholders
+  args:
+    - "--file=.placeholders"
+    - "--regex=\\${variable}"
+    - "--regex=__{variable}__"
+```
+
+To check for aa pattern that does not depend on `.placeholders`:
+
+```yaml
+- id: check-placeholders
+  args:
+    - "--regex=YOUR_PATTERN"
 ```
 
 #### Examples
