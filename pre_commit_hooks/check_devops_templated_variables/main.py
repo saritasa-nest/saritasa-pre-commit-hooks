@@ -19,7 +19,7 @@ def parse_args(argv=None):
       argv: optional list of command-line arguments (default: sys.argv)
 
     Returns:
-      argparse.Namespace object: parsed arguments including commit_filenames and mode
+      argparse.Namespace object: parsed arguments including commit_filenames and regex config
 
     """
     parser = argparse.ArgumentParser()
@@ -30,12 +30,12 @@ def parse_args(argv=None):
     )
     parser.add_argument(
         "--regex",
-        dest="regex_templates",
+        dest="regex_patterns",
         action="append",
         required=True,
         help=(
-            "Regex used for placeholder detection. Use {variables} as a placeholder. "
-            "Can be passed multiple times."
+            "Regex used for placeholder detection. Use {variable} as a placeholder. "
+            "Can be passed multiple times. "
         ),
     )
     parser.add_argument(
@@ -76,32 +76,34 @@ def load_variables(variables_file: str) -> list[str]:
     return variables
 
 
-def get_patterns(variables: list[str], regex_templates: list[str]) -> list[str]:
-    """Build patterns from the passed regex templates.
+def get_patterns(variables: list[str], regex_patterns: list[str]) -> list[str]:
+    """Build patterns from the passed regexp config.
+
+    If a regexp contains `{variable}`, one pattern will be generated for every
+    variable from the variables file.
+
+    If a regexp does not contain `{variable}`, it will be compiled as-is.
 
     Args:
       variables: list of placeholder variable names from the variables file, e.g `DOMAIN`
-      regex_templates: regex templates passed through pre-commit arguments
+      regex_patterns: regex patterns passed through pre-commit arguments
 
     Returns:
       regexes: list of compiled placeholder regex patterns
 
     """
-    if not variables:
-        return []
-
-    # Escape the variable name for symbols like "-", e.g. in `HELM_ARGO-CD`
-    # And sort by longest variable first (`PROJECT_NAME` matched before `PROJECT`)
-    escaped = sorted((re.escape(var) for var in variables), key=len, reverse=True)
-
-    variables_regex = "|".join(escaped)
-
     regexes = []
-    for template in regex_templates:
-        if "{variables}" not in template:
-            raise ValueError(f"Invalid regex {template!r}: missing the {{variables}} token")
 
-        regexes.append(re.compile(template.format(variables=variables_regex)))
+    for pattern in regex_patterns:
+        if "{variable}" in pattern:
+            if not variables:
+                continue
+
+            for variable in variables:
+                pattern_str = pattern.replace("{variable}", re.escape(variable))
+                regexes.append(re.compile(pattern_str))
+        else:
+            regexes.append(re.compile(pattern))
 
     return regexes
 
@@ -132,13 +134,13 @@ def find_placeholder_match(filename: str, regexes: list[str]) -> tuple(str, int,
         return
 
 
-def check_files(filenames: list[str], variables_file: str, regex_templates: list[str]) -> int:
+def check_files(filenames: list[str], variables_file: str, regex_patterns: list[str]) -> int:
     """Check files for unreplaced placeholders.
 
     Args:
       filenames: names of the files passed by pre-commit
       variables_file: path to the file containing placeholder variable names
-      regex_templates: regex templates to detect placeholders
+      regex_patterns: regex patterns to detect placeholders
 
     Returns:
       (int): 0 if check passes (no unreplaces placeholders found), 1 otherwise
@@ -146,7 +148,7 @@ def check_files(filenames: list[str], variables_file: str, regex_templates: list
     """
     # Load placeholder variables from the placeholder file once
     variables = load_variables(variables_file)
-    regexes = get_patterns(variables, regex_templates)
+    regexes = get_patterns(variables, regex_patterns)
     # Variable for file failures to show all errors in all files in one run
     has_errors = False
 
@@ -174,9 +176,9 @@ def main(argv=None) -> int:
         return check_files(
             filenames=args.commit_filenames,
             variables_file=args.variables_file,
-            regex_templates=args.regex_templates,
+            regex_patterns=args.regex_patterns,
         )
-    except ValueError as error:
+    except (ValueError, re.error) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 
