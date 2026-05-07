@@ -92,18 +92,28 @@ def get_patterns(variables: list[str], regex_patterns: list[str]) -> list[str]:
     """
     regexes = []
 
+    # Sort to avoid matches for overlapping vars (i.e. `PROJECT` and `PROJECT_NAME`)
+    escaped_variables = sorted({re.escape(variable) for variable in variables}, key=len, reverse=True)
+    variable_pattern = "|".join(escaped_variables)
+
     for pattern in regex_patterns:
         if "{variable}" in pattern:
-            if not variables:
+            if not variable_pattern:
                 continue
 
-            for variable in variables:
-                pattern_str = pattern.replace("{variable}", re.escape(variable))
-                regexes.append(re.compile(pattern_str))
+            pattern_str = pattern.replace("{variable}", f"(?:{variable_pattern})")
+            regexes.append(pattern_str)
         else:
-            regexes.append(re.compile(pattern))
+            regexes.append(pattern)
 
-    return regexes
+    if not regexes:
+        return []
+
+    # Combine all configured patterns into one regexp to scan each line only once
+    combined_pattern = "|".join(f"(?:{pattern})" for pattern in regexes)
+    compiled_pattern = re.compile(combined_pattern)
+
+    return [compiled_pattern]
 
 
 def find_placeholder_match(filename: str, regexes: list[str]) -> tuple(str, int, int):
