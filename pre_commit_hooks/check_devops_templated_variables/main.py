@@ -116,7 +116,7 @@ def get_patterns(variables: list[str], regex_patterns: list[str]) -> list[str]:
     return [compiled_pattern]
 
 
-def find_placeholder_match(filename: str, regexes: list[str]) -> tuple(str, int, int):
+def find_placeholder_match(filename: str, regexes: list[str]) -> tuple[str, int, int]:
     """Iterate over file contents and return placeholder matches found in it.
 
     Args:
