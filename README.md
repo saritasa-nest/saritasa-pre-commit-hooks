@@ -267,3 +267,34 @@ use the following flag.
     # ...
     - --disable-strict-mode
 ```
+
+## Local development
+
+Prepare local dev environment using [uv](https://github.com/astral-sh/uv#installation)
+with any supported Python version (`3.10+`), for example::
+
+```console
+uv venv --python 3.14 --prompt pre-commit-hooks --seed
+uv pip install -r requirements.txt
+uv pip install -r pre_commit_hooks/kubernetes/kyverno/kyverno_test/requirements.txt
+source .venv/bin/activate
+```
+
+Setup [prek](https://prek.j178.dev/) hooks:
+
+```console
+uv pip install prek
+prek install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg
+```
+
+### Run tests
+
+```console
+pytest
+```
+
+### Run all pre-commit hooks
+
+```console
+prek run --stage pre-push --all-files
+```
