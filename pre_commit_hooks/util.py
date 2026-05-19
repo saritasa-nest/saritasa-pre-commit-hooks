@@ -62,9 +62,16 @@ def git_commit(commit_msg: str):
     )
 
 
-def get_current_branch() -> str:
-    """Return current branch's name."""
-    return cmd_output("git", "symbolic-ref", "--short", "HEAD")
+def get_current_branch() -> str | None:
+    """Return current branch's name if it can be found."""
+    try:
+        return cmd_output("git", "symbolic-ref", "--short", "HEAD")
+    except RuntimeError:
+        # If symbolic-ref fails (e.g., detached HEAD), fall back to name-rev
+        try:
+            return cmd_output("git", "name-rev", "--name-only", "HEAD")
+        except RuntimeError:
+            return None
 
 
 def get_git_config_param(param: str) -> str | None:
@@ -118,7 +125,7 @@ def strip_comment_section(message: str) -> str:
 
 
 def get_changed_files() -> set[str]:
-    """Retrieves a set of all staged files except the deleted ones."""
+    """Retrieve a set of all staged files except the deleted ones."""
     cmd = (
         "git",
         "diff",
@@ -126,19 +133,19 @@ def get_changed_files() -> set[str]:
         "--name-only",
         "--no-ext-diff",
         # D (Deleted) is excluded
-        "--diff-filter=ACMRTUXB"
+        "--diff-filter=ACMRTUXB",
     )
     return set(cmd_output(*cmd).splitlines())
 
 
 def get_deleted_files() -> set[str]:
-    """Retrieves a set of the deleted staged files."""
+    """Retrieve a set of the deleted staged files."""
     cmd = (
         "git",
         "diff",
         "--staged",
         "--name-only",
         "--no-ext-diff",
-        "--diff-filter=D"
+        "--diff-filter=D",
     )
     return set(cmd_output(*cmd).splitlines())
