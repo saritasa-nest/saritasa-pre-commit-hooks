@@ -31,7 +31,7 @@ location ~ ^/(app/|vendor|src|tests|vagrant|docs|phpunit|svn|git|docker|migratio
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -45,7 +45,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -60,7 +60,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -77,7 +77,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -115,7 +115,7 @@ Example of what should be added to `.pre-commit-config.yaml`
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: add-task-number
         # To check logs about which task was appended to commit message
@@ -139,7 +139,7 @@ Example of what should be added to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: jira-pre-commit
         verbose: true
@@ -205,7 +205,7 @@ The basic configuration for the hook has the following form:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: kyverno-test
         args:
@@ -266,6 +266,192 @@ use the following flag.
   args:
     # ...
     - --disable-strict-mode
+```
+
+### `check-placeholders`
+
+Prevent committing files with unreplaced placeholder variables.
+
+By default hook checks files passed by pre-commit for placeholder values defined in `.placeholders`. The config file can be changed by passing a `--file=.new.placeholders` argument to the hook.
+
+At least one `--regex` argument must be passed to the hook. The regex must be a valid Python regular expression.
+
+You can test regexes online here: [regex101.com](https://regex101.com/).
+
+The hook supports two regex styles:
+
+#### Regex with {variable}
+
+If the regex contains `{variable}`, the hook replaces it with each variable from the placeholders file.
+
+For example, with `.placeholders` file that contains:
+
+```sh
+DOMAIN
+PROJECT_NAME
+ENVIRONMENT
+```
+
+And this hook config:
+
+```yaml
+args:
+  - "--file=.placeholders"
+  - "--regex=__{variable}__"
+```
+
+The hook will be looking for the following unreplaced placeholders:
+
+```sh
+__DOMAIN__
+__PROJECT_NAME__
+__ENVIRONMENT__
+```
+
+#### Regexes without {variable}
+
+If the regex does not contain `{variable}`, it is compiled and used as is.
+
+For example:
+
+```yaml
+args:
+  - "--regex=@[A-Z-_]+"
+```
+
+The hook will detect:
+
+```sh
+@TEST_VAR
+@VAR-TEST
+@FOO
+```
+
+Multiple `--regex` arguments can be passed. This allows checking several placeholder formats at once.
+
+If an unreplaced placeholder is found, the hook fails and outputs an error in the format:
+
+```sh
+filename:line:column: unreplaced placeholder <placeholder>
+```
+
+This format was chosen for convenience, because it becomes "clickable" in VScode, and takes you directly to the matched placeholder (with ctrl + click).
+
+#### Hook usage example
+
+The example configuration for the hook has the following form:
+
+```yaml
+- repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
+  rev: 0.0.8
+  hooks:
+    - id: check-placeholders
+      args:
+        - "--file=<YOUR_CONFIG>"
+        - "--regex=<YOUR_REGEX>"
+```
+
+To check only for kubernetes-style placeholders, such as `$DOMAIN`:
+
+```yaml
+- id: check-placeholders
+  args:
+    - "--file=.placeholders"
+    - "--regex=\\${variable}"
+```
+
+This detects:
+
+```sh
+$DOMAIN
+$PROJECT_NAME
+$ENVIRONMENT-test
+```
+
+As:
+
+```sh
+$DOMAIN
+$PROJECT_NAME
+$ENVIRONMENT
+```
+
+To check only for terraform-style placeholders(`__DOMAIN__`):
+
+```yaml
+- id: check-placeholders
+  args:
+    - "--file=.placeholders"
+    - "--regex=__{variable}__"
+```
+
+This detects:
+
+```sh
+__DOMAIN__
+__PROJECT_NAME__
+__ENVIRONMENT__-test
+```
+
+As:
+
+```sh
+__DOMAIN__
+__PROJECT_NAME__
+__ENVIRONMENT__
+```
+
+To check for both styles:
+
+```yaml
+- id: check-placeholders
+  args:
+    - "--file=.placeholders"
+    - "--regex=\\${variable}"
+    - "--regex=__{variable}__"
+```
+
+To check for aa pattern that does not depend on `.placeholders`:
+
+```yaml
+- id: check-placeholders
+  args:
+    - "--regex=YOUR_PATTERN"
+```
+
+#### Examples
+
+The following example will fail the hook:
+
+```hcl
+eks_external_secrets_prefix_access = [
+  "__PROJECT_NAME__-staging",
+  "__PROJECT_NAME__-dev"
+]
+```
+
+With the following error:
+
+```sh
+terraform/terraform/staging/staging.tfvars:604:6: unreplaced placeholder __PROJECT_NAME__
+terraform/terraform/staging/staging.tfvars:605:6: unreplaced placeholder __PROJECT_NAME__
+```
+
+The following example will fail the hook:
+
+```yaml
+labels:
+  created-by: $CREATED_BY
+  ops-main: $CREATED_BY
+  ops-secondary: $OPS_SECONDARY
+```
+
+With the following error:
+
+```sh
+kubernetes/prod/argocd/apps/values.yaml:1909:13: unreplaced placeholder $CREATED_BY
+kubernetes/prod/argocd/apps/values.yaml:1910:11: unreplaced placeholder $CREATED_BY
+kubernetes/prod/argocd/apps/values.yaml:1911:16: unreplaced placeholder $OPS_SECONDARY
 ```
 
 ## Local development

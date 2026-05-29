@@ -41,3 +41,12 @@
     - pre-push
     - manual
   require_serial: true
+
+- id: check-placeholders
+  name: Check for placeholder variables in code
+  description: Checks for unreplaced placeholder variables, e.g. `$DOMAIN`, in code
+  entry: check-placeholders
+  language: python
+  stages:
+    - pre-commit
+    - pre-push
