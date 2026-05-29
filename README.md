@@ -453,3 +453,34 @@ kubernetes/prod/argocd/apps/values.yaml:1909:13: unreplaced placeholder $CREATED
 kubernetes/prod/argocd/apps/values.yaml:1910:11: unreplaced placeholder $CREATED_BY
 kubernetes/prod/argocd/apps/values.yaml:1911:16: unreplaced placeholder $OPS_SECONDARY
 ```
+
+## Local development
+
+Prepare local dev environment using [uv](https://github.com/astral-sh/uv#installation)
+with any supported Python version (`3.10+`), for example::
+
+```console
+uv venv --python 3.14 --prompt pre-commit-hooks --seed
+uv pip install -r requirements.txt
+uv pip install -r pre_commit_hooks/kubernetes/kyverno/kyverno_test/requirements.txt
+source .venv/bin/activate
+```
+
+Setup [prek](https://prek.j178.dev/) hooks:
+
+```console
+uv pip install prek
+prek install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg
+```
+
+### Run tests
+
+```console
+pytest
+```
+
+### Run all pre-commit hooks
+
+```console
+prek run --stage pre-push --all-files
+```

@@ -72,8 +72,10 @@ def strip_comment_section(message: str) -> str:
 def add_task_number(filename: str, branch_regex: str, format_template: str):
     """Provide task number to commit message."""
     branch = get_current_branch()
-    task_number = retrieve_task(branch, branch_regex)
+    if not branch:
+        return
 
+    task_number = retrieve_task(branch, branch_regex)
     if not task_number:
         return
 

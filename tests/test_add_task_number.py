@@ -1,3 +1,7 @@
+import os
+import shlex
+import sys
+
 import pytest
 
 from pre_commit_hooks import util as base_util
@@ -144,3 +148,58 @@ def test_commit_message_will_not_be_modified_for_wrong_branch(
             last_commit_message = commit_msg_file.read()
 
         assert last_commit_message == expected_commit_message
+
+
+def test_add_task_number_during_amend_in_interactive_rebase(
+    temp_git_dir,
+    branch_regex,
+    format_template,
+):
+    """Check task and `git commit --amend` during interactive rebase."""
+    with temp_git_dir.as_cwd():
+        base_util.git_commit("Init commit")
+        base_util.git_create_branch("feature/ABC-123-my-beautiful-branch")
+        base_util.git_commit("First commit")
+        base_util.git_commit("Second commit")
+
+        # Perform `git rebase -i HEAD~2` and change
+        # `pick` to `edit` for the first commit
+        sequence_editor = " ".join(
+            [
+                shlex.quote(sys.executable),
+                "-c",
+                shlex.quote(
+                    "from pathlib import Path; "
+                    "import sys; "
+                    "todo_path = Path(sys.argv[1]); "
+                    "lines = todo_path.read_text().splitlines(); "
+                    "lines[0] = lines[0].replace('pick ', 'edit ', 1); "
+                    "todo_path.write_text('\\n'.join(lines) + '\\n')",
+                ),
+            ],
+        )
+        base_util.cmd_output(
+            "git",
+            "rebase",
+            "-i",
+            "HEAD~2",
+            env={
+                **os.environ,
+                "GIT_SEQUENCE_EDITOR": sequence_editor,
+            },
+        )
+
+        commit_msg_file_path = f"{temp_git_dir}/.git/COMMIT_EDITMSG"
+        with open(commit_msg_file_path, "w") as commit_msg_file:
+            commit_msg_file.write("Updated First commit")
+
+        main.add_task_number(
+            filename=commit_msg_file_path,
+            branch_regex=branch_regex,
+            format_template=format_template,
+        )
+
+        with open(commit_msg_file_path, "r") as commit_msg_file:
+            last_commit_message = commit_msg_file.read()
+
+        assert last_commit_message == "Updated First commit\n\nTask: ABC-123"
