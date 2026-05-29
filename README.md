@@ -31,7 +31,7 @@ location ~ ^/(app/|vendor|src|tests|vagrant|docs|phpunit|svn|git|docker|migratio
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -45,7 +45,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -60,7 +60,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -77,7 +77,7 @@ Examples:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: check-nginx-wide-range
         args:
@@ -115,7 +115,7 @@ Example of what should be added to `.pre-commit-config.yaml`
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: add-task-number
         # To check logs about which task was appended to commit message
@@ -139,7 +139,7 @@ Example of what should be added to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: jira-pre-commit
         verbose: true
@@ -205,7 +205,7 @@ The basic configuration for the hook has the following form:
 ```yaml
 repos:
   - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-    rev: 0.0.5
+    rev: 0.0.8
     hooks:
       - id: kyverno-test
         args:
@@ -343,7 +343,7 @@ The example configuration for the hook has the following form:
 
 ```yaml
 - repo: https://github.com/saritasa-nest/saritasa-pre-commit-hooks
-  rev: 0.0.7
+  rev: 0.0.8
   hooks:
     - id: check-placeholders
       args:
