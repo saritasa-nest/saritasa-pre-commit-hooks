@@ -17,10 +17,10 @@ asserts that the repository matches the hook's assumptions — the point is to f
 message instead of letting `kyverno test` fail obscurely later. It checks that:
 
 - the policies directory contains only `.yaml` files (except those passed via `--ignore-path`);
-- each policy is a Kyverno policy manifest — its `apiVersion` is in the `kyverno.io` or
-  `policies.kyverno.io` group, its `kind` is `Policy`, `ClusterPolicy`, or `MutatingPolicy`, its
-  `metadata.name` matches its filename, and its spec declares a non-empty `rules` list (or
-  `mutations`, for `MutatingPolicy`);
+- each policy is a Kyverno policy manifest — its `apiVersion` is a well-formed `group/version` in
+  the `kyverno.io` or `policies.kyverno.io` group, its `kind` is `Policy`, `ClusterPolicy`, or
+  `MutatingPolicy`, its `metadata.name` matches its filename, and its spec declares a non-empty
+  `rules` list (or `mutations`, for `MutatingPolicy`);
 - the tests directory contains one subdirectory per policy, named after it;
 - each test subdirectory holds exactly one test manifest (`kyverno-test.yaml` by default) that is
   a `cli.kyverno.io` `Test`, references its own policy by a relative path inside the policies

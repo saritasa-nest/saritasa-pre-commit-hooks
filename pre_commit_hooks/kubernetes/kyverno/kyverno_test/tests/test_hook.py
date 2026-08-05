@@ -313,6 +313,15 @@ def test_validator_manifest_wrong_reference(temp_git_dir, validator):
         "expected add-emptydir-sizelimit.yaml, got emptydir-sizelimit.yaml" in str(e)
 
 
+def test_validator_policy_api_version_without_version(temp_git_dir, validator):
+    """Tests validator on a policy whose apiVersion has no version segment."""
+    _prepare_assets(temp_git_dir, "policy-missing-api-version-segment")
+    with temp_git_dir.as_cwd(), pytest.raises(ValidationError) as e:
+        validator.validate()
+    assert "config/policies/add-emptydir-sizelimit.yaml has invalid apiVersion: " \
+        "policies.kyverno.io" in str(e)
+
+
 def test_validator_mutating_policy(temp_git_dir, validator):
     """Tests validator on a MutatingPolicy."""
     _prepare_assets(temp_git_dir, "mutating-policy")
