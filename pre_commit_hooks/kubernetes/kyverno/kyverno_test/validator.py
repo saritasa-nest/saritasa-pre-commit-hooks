@@ -74,23 +74,43 @@ class Validator:
         Raises:
             ValidationError: If the policy manifest is not valid.
         """
+        def api_version_handler(api_version: Any) -> tuple[bool, str]:
+            message = f"{path} has invalid apiVersion: {api_version}"
+            if not isinstance(api_version, str):
+                return (False, message)
+            # `Policy` and `ClusterPolicy` live in the `kyverno.io` group, while
+            # `MutatingPolicy` lives in `policies.kyverno.io`. An apiVersion is
+            # exactly `group/version`, so both segments are required and nothing
+            # may follow them.
+            group, _, version = api_version.partition("/")
+            groups = {"kyverno.io", "policies.kyverno.io"}
+            return (group in groups and bool(version) and "/" not in version, message)
+
+        def spec_handler(spec: Any) -> tuple[bool, str]:
+            if not isinstance(spec, dict):
+                return (False, f"{path} does not define a spec mapping")
+            # `Policy` and `ClusterPolicy` declare `rules`, while `MutatingPolicy`
+            # declares `mutations` instead.
+            for key in ("rules", "mutations"):
+                value = spec.get(key)
+                if isinstance(value, list) and len(value) > 0:
+                    return (True, "")
+            return (False, f"{path} does not define a non-empty list of rules or mutations")
+
         self._validate_yaml_manifest(path, {
-            "apiVersion": lambda api_version: (
-                isinstance(api_version, str) and api_version.startswith("kyverno.io/"),
-                f"{path} has invalid apiVersion: {api_version}"
-            ),
+            "apiVersion": api_version_handler,
             "kind": lambda kind: (
-                isinstance(kind, str) and kind in {"Policy", "ClusterPolicy"},
-                f"{path} is neither a Policy nor a ClusterPolicy, it is a {kind}"
+                isinstance(kind, str) and kind in {
+                    "Policy", "ClusterPolicy", "MutatingPolicy"
+                },
+                f"{path} is not a Policy, a ClusterPolicy or a MutatingPolicy, "
+                f"it is a {kind}"
             ),
             "metadata~>name": lambda name: (
                 isinstance(name, str) and name == path.stem,
                 f"{path} has a nonmatching name: {path.stem} ≠ {name}"
             ),
-            "spec~>rules": lambda rules: (
-                isinstance(rules, list) and len(rules) > 0,
-                f"{path} does not define a non-empty list of rules"
-            )
+            "spec": spec_handler
         })
 
     def _validate_policies(self) -> set[str]:

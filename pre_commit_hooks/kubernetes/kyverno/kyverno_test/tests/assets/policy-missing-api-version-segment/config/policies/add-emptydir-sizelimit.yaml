@@ -1,0 +1,24 @@
+apiVersion: policies.kyverno.io
+kind: MutatingPolicy
+metadata:
+  name: add-emptydir-sizelimit
+spec:
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      operations: ["CREATE"]
+      resources: ["pods"]
+  mutations:
+  - patchType: ApplyConfiguration
+    applyConfiguration:
+      expression: >
+        Object{
+          spec: Object.spec{
+            volumes: object.spec.volumes.map(volume, Object.spec.volumes.Item{
+              emptyDir: Object.spec.volumes.Item.emptyDir{
+                sizeLimit: quantity("100Mi")
+              }
+            })
+          }
+        }
