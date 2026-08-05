@@ -74,23 +74,36 @@ class Validator:
         Raises:
             ValidationError: If the policy manifest is not valid.
         """
+        def spec_handler(spec: Any) -> tuple[bool, str]:
+            if not isinstance(spec, dict):
+                return (False, f"{path} does not define a spec mapping")
+            # `Policy` and `ClusterPolicy` declare `rules`, while `MutatingPolicy`
+            # declares `mutations` instead.
+            for key in ("rules", "mutations"):
+                value = spec.get(key)
+                if isinstance(value, list) and len(value) > 0:
+                    return (True, "")
+            return (False, f"{path} does not define a non-empty list of rules or mutations")
+
         self._validate_yaml_manifest(path, {
             "apiVersion": lambda api_version: (
-                isinstance(api_version, str) and api_version.startswith("kyverno.io/"),
+                isinstance(api_version, str) and api_version.split("/")[0] in {
+                    "kyverno.io", "policies.kyverno.io"
+                },
                 f"{path} has invalid apiVersion: {api_version}"
             ),
             "kind": lambda kind: (
-                isinstance(kind, str) and kind in {"Policy", "ClusterPolicy"},
-                f"{path} is neither a Policy nor a ClusterPolicy, it is a {kind}"
+                isinstance(kind, str) and kind in {
+                    "Policy", "ClusterPolicy", "MutatingPolicy"
+                },
+                f"{path} is not a Policy, a ClusterPolicy or a MutatingPolicy, "
+                f"it is a {kind}"
             ),
             "metadata~>name": lambda name: (
                 isinstance(name, str) and name == path.stem,
                 f"{path} has a nonmatching name: {path.stem} ≠ {name}"
             ),
-            "spec~>rules": lambda rules: (
-                isinstance(rules, list) and len(rules) > 0,
-                f"{path} does not define a non-empty list of rules"
-            )
+            "spec": spec_handler
         })
 
     def _validate_policies(self) -> set[str]:

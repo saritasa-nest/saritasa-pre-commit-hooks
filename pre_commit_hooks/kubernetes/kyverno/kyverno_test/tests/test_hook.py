@@ -313,6 +313,13 @@ def test_validator_manifest_wrong_reference(temp_git_dir, validator):
         "expected add-emptydir-sizelimit.yaml, got emptydir-sizelimit.yaml" in str(e)
 
 
+def test_validator_mutating_policy(temp_git_dir, validator):
+    """Tests validator on a MutatingPolicy."""
+    _prepare_assets(temp_git_dir, "mutating-policy")
+    with temp_git_dir.as_cwd():
+        validator.validate()
+
+
 def test_run_on_correct_policy(temp_git_dir, hook):
     """Tests run on a correct policy."""
     _prepare_assets(temp_git_dir, "correct-policy")
